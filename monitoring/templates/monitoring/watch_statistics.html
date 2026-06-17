@@ -1,0 +1,80 @@
+{% extends "monitoring/base.html" %}
+
+{% block content %}
+
+<h1 class="mb-4">
+    Team Statistics
+</h1>
+
+<div class="card shadow-sm">
+
+    <div class="card-body">
+
+        {% if statistics %}
+
+        <table class="table table-bordered">
+
+            <thead>
+
+                <tr>
+                    <th>Team</th>
+                    <th>Points</th>
+                    <th>2PT</th>
+                    <th>3PT</th>
+                    <th>FT</th>
+                    <th>Updated</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for stat in statistics %}
+
+                <tr>
+
+                    <td>
+                        {{ stat.team_name }}
+                    </td>
+
+                    <td>
+                        {{ stat.points }}
+                    </td>
+
+                    <td>
+                        {{ stat.two_pt_made }}/{{ stat.two_pt_attempted }}
+                    </td>
+
+                    <td>
+                        {{ stat.three_pt_made }}/{{ stat.three_pt_attempted }}
+                    </td>
+
+                    <td>
+                        {{ stat.free_throw_made }}/{{ stat.free_throw_attempted }}
+                    </td>
+
+                    <td>
+                        {{ stat.created_at }}
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+        {% else %}
+
+        <div class="alert alert-info">
+            No statistics available.
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

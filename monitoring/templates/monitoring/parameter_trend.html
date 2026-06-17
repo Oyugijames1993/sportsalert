@@ -1,0 +1,380 @@
+{% extends "monitoring/base.html" %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+
+        <h2>
+            {{ watch.home_team }} vs {{ watch.away_team }}
+        </h2>
+
+        <p class="text-muted mb-0">
+            {{ parameter.get_parameter_display }}
+        </p>
+
+    </div>
+
+    <a href="{% url 'watch-detail' watch.pk %}"
+       class="btn btn-secondary">
+        Back to Watch
+    </a>
+
+</div>
+
+<!-- SUMMARY CARDS -->
+
+<div class="row mb-4">
+
+    <div class="col-md-4">
+
+        <div class="card shadow-sm">
+
+            <div class="card-body text-center">
+
+                <h6 class="text-muted">
+                    Baseline
+                </h6>
+
+                <h3>
+                    {{ baseline }}
+                </h3>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-4">
+
+        <div class="card shadow-sm">
+
+            <div class="card-body text-center">
+
+                <h6 class="text-muted">
+                    Upper Threshold
+                </h6>
+
+                <h3>
+                    {{ upper_threshold }}
+                </h3>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-4">
+
+        <div class="card shadow-sm">
+
+            <div class="card-body text-center">
+
+                <h6 class="text-muted">
+                    Lower Threshold
+                </h6>
+
+                <h3>
+                    {{ lower_threshold }}
+                </h3>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- CHART -->
+
+<div class="card shadow-sm">
+
+    <div class="card-header">
+
+        <h5 class="mb-0">
+            Projection Trend
+        </h5>
+
+    </div>
+
+    <div class="card-body">
+
+        <canvas id="trendChart"
+                height="120">
+        </canvas>
+
+    </div>
+
+</div>
+
+<!-- SNAPSHOT TABLE -->
+
+<div class="card shadow-sm mt-4">
+
+    <div class="card-header">
+
+        <h5 class="mb-0">
+            Snapshot History
+        </h5>
+
+    </div>
+
+    <div class="card-body">
+
+        {% if snapshots %}
+
+            <div class="table-responsive">
+
+                <table class="table table-striped">
+
+                    <thead>
+
+                        <tr>
+                            <th>Minute</th>
+                            <th>Projection</th>
+                            <th>Current Points</th>
+                            <th>Deviation</th>
+                            <th>Recorded</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for snapshot in snapshots %}
+
+                        <tr>
+
+                            <td>
+                                {{ snapshot.minutes_played }}
+                            </td>
+
+                            <td>
+                                {{ snapshot.projection }}
+                            </td>
+
+                            <td>
+                                {{ snapshot.current_points }}
+                            </td>
+
+                            <td>
+                                {{ snapshot.deviation }}
+                            </td>
+
+                            <td>
+                                {{ snapshot.created_at }}
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        {% else %}
+
+            <p class="text-muted mb-0">
+                No snapshots available.
+            </p>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+const chart = new Chart(
+
+    document.getElementById(
+        "trendChart"
+    ),
+
+    {
+
+        type: "line",
+
+        data: {
+
+            labels: [],
+
+            datasets: [
+
+                {
+                    label: "Projection",
+
+                    data: [],
+
+                    borderColor: "#0d6efd",
+
+                    backgroundColor:
+                        "rgba(13,110,253,0.1)",
+
+                    borderWidth: 3,
+
+                    tension: 0.3,
+
+                    fill: false
+                },
+
+                {
+                    label: "Baseline",
+
+                    data: [],
+
+                    borderColor: "#dc3545",
+
+                    borderWidth: 2,
+
+                    pointRadius: 0
+                },
+
+                {
+                    label: "Upper Threshold",
+
+                    data: [],
+
+                    borderColor: "#fd7e14",
+
+                    borderDash: [8, 8],
+
+                    pointRadius: 0
+                },
+
+                {
+                    label: "Lower Threshold",
+
+                    data: [],
+
+                    borderColor: "#fd7e14",
+
+                    borderDash: [8, 8],
+
+                    pointRadius: 0
+                }
+
+            ]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            interaction: {
+                intersect: false,
+                mode: "index"
+            },
+
+            plugins: {
+
+                legend: {
+                    position: "top"
+                }
+
+            },
+
+            scales: {
+
+                x: {
+
+                    title: {
+
+                        display: true,
+
+                        text: "Minutes Played"
+
+                    }
+
+                },
+
+                y: {
+
+                    title: {
+
+                        display: true,
+
+                        text: "Projected Final Score"
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    }
+
+);
+
+function loadChartData() {
+
+    fetch(
+        "{% url 'watch-data' watch.pk %}"
+    )
+
+    .then(
+        response => response.json()
+    )
+
+    .then(data => {
+
+        chart.data.labels =
+            data.labels;
+
+        chart.data.datasets[0].data =
+            data.projections;
+
+        chart.data.datasets[1].data =
+            data.labels.map(
+                () => data.baseline
+            );
+
+        chart.data.datasets[2].data =
+            data.labels.map(
+                () => data.upper_threshold
+            );
+
+        chart.data.datasets[3].data =
+            data.labels.map(
+                () => data.lower_threshold
+            );
+
+        chart.update();
+
+    })
+
+    .catch(error => {
+
+        console.error(
+            "Polling error:",
+            error
+        );
+
+    });
+
+}
+
+loadChartData();
+
+setInterval(
+    loadChartData,
+    5000
+);
+
+</script>
+
+{% endblock %}

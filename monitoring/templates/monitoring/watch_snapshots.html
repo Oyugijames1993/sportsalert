@@ -1,0 +1,85 @@
+{% extends "monitoring/base.html" %}
+
+{% block content %}
+
+<h1 class="mb-4">
+    Snapshots:
+    {{ watch.home_team }}
+    vs
+    {{ watch.away_team }}
+</h1>
+
+<div class="card shadow-sm">
+
+    <div class="card-body">
+
+        {% if snapshots %}
+
+        <div class="table-responsive">
+
+            <table class="table table-striped">
+
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Current</th>
+                        <th>Expected</th>
+                        <th>Projection</th>
+                        <th>Deviation</th>
+                        <th>Minutes</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for snapshot in snapshots %}
+
+                    <tr>
+
+                        <td>
+                            {{ snapshot.created_at }}
+                        </td>
+
+                        <td>
+                            {{ snapshot.current_points }}
+                        </td>
+
+                        <td>
+                            {{ snapshot.expected_points }}
+                        </td>
+
+                        <td>
+                            {{ snapshot.projection }}
+                        </td>
+
+                        <td>
+                            {{ snapshot.deviation }}
+                        </td>
+
+                        <td>
+                            {{ snapshot.minutes_played }}
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <div class="alert alert-info">
+            No snapshots available.
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

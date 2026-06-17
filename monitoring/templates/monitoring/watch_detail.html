@@ -1,0 +1,356 @@
+{% extends "monitoring/base.html" %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+        <h1>
+            {{ watch.home_team }} vs {{ watch.away_team }}
+        </h1>
+
+        <p class="text-muted mb-0">
+            {{ watch.league }}
+        </p>
+    </div>
+
+    <div>
+
+        <a href="{% url 'watch-update' watch.pk %}"
+           class="btn btn-primary">
+            Edit
+        </a>
+
+        {% if watch.active %}
+
+            <a href="{% url 'toggle-watch' watch.pk %}"
+               class="btn btn-warning">
+                Deactivate
+            </a>
+
+        {% else %}
+
+            <a href="{% url 'toggle-watch' watch.pk %}"
+               class="btn btn-success">
+                Activate
+            </a>
+
+        {% endif %}
+
+        <a href="{% url 'watch-delete' watch.pk %}"
+           class="btn btn-danger">
+            Delete
+        </a>
+
+    </div>
+
+</div>
+
+<div class="row">
+
+    <!-- WATCH INFO -->
+
+    <div class="col-lg-4">
+
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-header">
+                Watch Information
+            </div>
+
+            <div class="card-body">
+
+                <p>
+                    <strong>Sport:</strong>
+                    {{ watch.get_sport_display }}
+                </p>
+
+                <p>
+                    <strong>Match ID:</strong>
+                    {{ watch.match_id }}
+                </p>
+
+                <p>
+                    <strong>Status:</strong>
+
+                    {% if watch.active %}
+                        <span class="badge bg-success">
+                            Active
+                        </span>
+                    {% else %}
+                        <span class="badge bg-danger">
+                            Inactive
+                        </span>
+                    {% endif %}
+
+                </p>
+
+                <p>
+                    <strong>Created:</strong>
+                    {{ watch.created_at }}
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- PARAMETERS -->
+
+        <div class="card shadow-sm">
+
+            <div class="card-header">
+                Parameters Being Tracked
+            </div>
+
+            <div class="card-body">
+
+                {% for parameter in parameters %}
+
+                    <div class="border rounded p-3 mb-3">
+
+                        <h6>
+                            {{ parameter.get_parameter_display }}
+                        </h6>
+
+                        <p class="mb-1">
+                            <strong>Baseline:</strong>
+                            {{ parameter.baseline }}
+                        </p>
+
+                        <p class="mb-2">
+                            <strong>Threshold:</strong>
+                            {{ parameter.threshold }}
+                        </p>
+
+                        <a href="{% url 'parameter-trend' watch.pk parameter.pk %}"
+                           class="btn btn-sm btn-outline-primary">
+                            View Trend
+                        </a>
+
+                    </div>
+
+                {% empty %}
+
+                    <p class="text-muted">
+                        No parameters configured.
+                    </p>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- SNAPSHOT -->
+
+    <div class="col-lg-8">
+
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-header">
+                Latest Snapshot
+            </div>
+
+            <div class="card-body">
+
+                {% if latest_snapshot %}
+
+                    <div class="row">
+
+                        <div class="col-md-4 mb-3">
+                            <strong>Current Points</strong>
+                            <br>
+                            {{ latest_snapshot.current_points }}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <strong>Projection</strong>
+                            <br>
+                            {{ latest_snapshot.projection }}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <strong>Deviation</strong>
+                            <br>
+                            {{ latest_snapshot.deviation }}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <strong>Minutes Played</strong>
+                            <br>
+                            {{ latest_snapshot.minutes_played }}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <strong>Expected Rate</strong>
+                            <br>
+                            {{ latest_snapshot.expected_scoring_rate }}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <strong>Actual Rate</strong>
+                            <br>
+                            {{ latest_snapshot.actual_scoring_rate }}
+                        </div>
+
+                    </div>
+
+                {% else %}
+
+                    <p class="text-muted">
+                        No snapshots available.
+                    </p>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+        <!-- RECENT ALERTS -->
+
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-header">
+                Recent Alerts
+            </div>
+
+            <div class="card-body">
+
+                {% if recent_alerts %}
+
+                    <table class="table">
+
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Message</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for alert in recent_alerts %}
+
+                                <tr>
+
+                                    <td>
+
+                                        {% if alert.alert_type == "UP" %}
+                                            <span class="badge bg-success">
+                                                UP
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-danger">
+                                                DOWN
+                                            </span>
+                                        {% endif %}
+
+                                    </td>
+
+                                    <td>
+                                        {{ alert.message }}
+                                    </td>
+
+                                    <td>
+                                        {{ alert.created_at }}
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                {% else %}
+
+                    <p class="text-muted">
+                        No alerts generated yet.
+                    </p>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+        <!-- TEAM STATISTICS -->
+
+        <div class="card shadow-sm">
+
+            <div class="card-header">
+                Team Statistics
+            </div>
+
+            <div class="card-body">
+
+                {% if team_statistics %}
+
+                    <table class="table table-striped">
+
+                        <thead>
+                            <tr>
+                                <th>Team</th>
+                                <th>Points</th>
+                                <th>2PT</th>
+                                <th>3PT</th>
+                                <th>FT</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for stat in team_statistics %}
+
+                                <tr>
+
+                                    <td>
+                                        {{ stat.team_name }}
+                                    </td>
+
+                                    <td>
+                                        {{ stat.points }}
+                                    </td>
+
+                                    <td>
+                                        {{ stat.two_pt_made }}/{{ stat.two_pt_attempted }}
+                                    </td>
+
+                                    <td>
+                                        {{ stat.three_pt_made }}/{{ stat.three_pt_attempted }}
+                                    </td>
+
+                                    <td>
+                                        {{ stat.free_throw_made }}/{{ stat.free_throw_attempted }}
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                {% else %}
+
+                    <p class="text-muted">
+                        No team statistics available.
+                    </p>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

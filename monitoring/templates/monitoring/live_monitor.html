@@ -1,0 +1,115 @@
+{% extends "monitoring/base.html" %}
+
+{% block content %}
+
+<h1 class="mb-4">
+    Live Monitor
+</h1>
+
+<div class="row">
+
+    <div class="col-lg-4">
+
+        <div class="card shadow-sm">
+
+            <div class="card-header">
+                Active Watches
+            </div>
+
+            <div class="card-body">
+
+                {% for watch in active_watches %}
+
+                    <div class="mb-3">
+
+                        <a href="{% url 'watch-detail' watch.pk %}">
+                            {{ watch.home_team }}
+                            vs
+                            {{ watch.away_team }}
+                        </a>
+
+                    </div>
+
+                {% empty %}
+
+                    <p class="text-muted">
+                        No active watches.
+                    </p>
+
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-lg-8">
+
+        <div class="card shadow-sm">
+
+            <div class="card-header">
+                Latest Snapshots
+            </div>
+
+            <div class="card-body">
+
+                <table class="table table-striped">
+
+                    <thead>
+
+                        <tr>
+                            <th>Match</th>
+                            <th>Current</th>
+                            <th>Projection</th>
+                            <th>Deviation</th>
+                            <th>Time</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for snapshot in latest_snapshots %}
+
+                        <tr>
+
+                            <td>
+                                {{ snapshot.watch.home_team }}
+                                vs
+                                {{ snapshot.watch.away_team }}
+                            </td>
+
+                            <td>
+                                {{ snapshot.current_points }}
+                            </td>
+
+                            <td>
+                                {{ snapshot.projection }}
+                            </td>
+
+                            <td>
+                                {{ snapshot.deviation }}
+                            </td>
+
+                            <td>
+                                {{ snapshot.created_at }}
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

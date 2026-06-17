@@ -1,0 +1,320 @@
+{% extends "monitoring/base.html" %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+
+    <div class="col-lg-10">
+
+        <div class="card shadow-sm">
+
+            <div class="card-header">
+                {% if object %}
+                    <h3 class="mb-0">Edit Watch</h3>
+                {% else %}
+                    <h3 class="mb-0">Create Watch</h3>
+                {% endif %}
+            </div>
+
+            <div class="card-body">
+
+                <form method="post">
+
+                    {% csrf_token %}
+
+                    {{ formset.management_form }}
+
+                    <h5 class="mb-3">
+                        Match Information
+                    </h5>
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                Sport
+                            </label>
+                            {{ form.sport }}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                Match ID
+                            </label>
+                            {{ form.match_id }}
+                        </div>
+
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                Home Team
+                            </label>
+                            {{ form.home_team }}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                Away Team
+                            </label>
+                            {{ form.away_team }}
+                        </div>
+
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            League
+                        </label>
+                        {{ form.league }}
+                    </div>
+
+                    <div class="form-check mb-4">
+                        {{ form.active }}
+                        <label class="form-check-label">
+                            Active Watch
+                        </label>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+
+                        <h5 class="mb-0">
+                            Parameters To Track
+                        </h5>
+
+                        <button
+                            type="button"
+                            id="add-parameter"
+                            class="btn btn-success btn-sm">
+                            + Add Parameter
+                        </button>
+
+                    </div>
+
+                    <div class="table-responsive">
+
+                        <table class="table table-bordered">
+
+                            <thead>
+                                <tr>
+                                    <th>Parameter</th>
+                                    <th>Baseline</th>
+                                    <th>Threshold</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="parameter-table">
+
+                                {% for parameter_form in formset %}
+
+                                <tr class="parameter-row">
+
+                                    <td>
+                                        {{ parameter_form.parameter }}
+                                    </td>
+
+                                    <td>
+                                        {{ parameter_form.baseline }}
+                                    </td>
+
+                                    <td>
+                                        {{ parameter_form.threshold }}
+                                    </td>
+
+                                    <td>
+
+                                        {% for hidden in parameter_form.hidden_fields %}
+                                            {{ hidden }}
+                                        {% endfor %}
+
+                                        {% if parameter_form.DELETE %}
+                                            <div class="d-none">
+                                                {{ parameter_form.DELETE }}
+                                            </div>
+                                        {% endif %}
+
+                                        <button
+                                            type="button"
+                                            class="btn btn-danger btn-sm remove-row">
+                                            Remove
+                                        </button>
+
+                                    </td>
+
+                                </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                    <template id="empty-form-template">
+
+                        <tr class="parameter-row">
+
+                            <td>
+                                {{ formset.empty_form.parameter }}
+                            </td>
+
+                            <td>
+                                {{ formset.empty_form.baseline }}
+                            </td>
+
+                            <td>
+                                {{ formset.empty_form.threshold }}
+                            </td>
+
+                            <td>
+
+                                {% for hidden in formset.empty_form.hidden_fields %}
+                                    {{ hidden }}
+                                {% endfor %}
+
+                                {% if formset.empty_form.DELETE %}
+                                    <div class="d-none">
+                                        {{ formset.empty_form.DELETE }}
+                                    </div>
+                                {% endif %}
+
+                                <button
+                                    type="button"
+                                    class="btn btn-danger btn-sm remove-row">
+                                    Remove
+                                </button>
+
+                            </td>
+
+                        </tr>
+
+                    </template>
+
+                    <div class="mt-4">
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary">
+                            Save Watch
+                        </button>
+
+                        <a href="{% url 'watch-list' %}"
+                           class="btn btn-secondary">
+                            Cancel
+                        </a>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const addButton =
+            document.getElementById(
+                "add-parameter"
+            );
+
+        const table =
+            document.getElementById(
+                "parameter-table"
+            );
+
+        const template =
+            document.getElementById(
+                "empty-form-template"
+            );
+
+        const totalForms =
+            document.getElementById(
+                "id_parameters-TOTAL_FORMS"
+            ) ||
+            document.getElementById(
+                "id_watchparameter_set-TOTAL_FORMS"
+            );
+
+        addButton.addEventListener(
+            "click",
+            function () {
+
+                const formIndex =
+                    parseInt(
+                        totalForms.value
+                    );
+
+                let html =
+                    template.innerHTML.replace(
+                        /__prefix__/g,
+                        formIndex
+                    );
+
+                table.insertAdjacentHTML(
+                    "beforeend",
+                    html
+                );
+
+                totalForms.value =
+                    formIndex + 1;
+
+            }
+        );
+
+        document.addEventListener(
+            "click",
+            function(event) {
+
+                if (
+                    event.target.classList.contains(
+                        "remove-row"
+                    )
+                ) {
+
+                    const row =
+                        event.target.closest(
+                            "tr"
+                        );
+
+                    const deleteField =
+                        row.querySelector(
+                            'input[type="checkbox"][name$="-DELETE"]'
+                        );
+
+                    if (deleteField) {
+
+                        deleteField.checked = true;
+                        row.style.display = "none";
+
+                    } else {
+
+                        row.remove();
+
+                    }
+
+                }
+
+            }
+        );
+
+    }
+);
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends "monitoring/base.html" %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <h1>Watches</h1>
+
+    <a href="{% url 'watch-create' %}"
+       class="btn btn-primary">
+        Create Watch
+    </a>
+
+</div>
+
+<div class="card shadow-sm">
+
+    <div class="card-body">
+
+        {% if watches %}
+
+            <table class="table table-hover align-middle">
+
+                <thead>
+                    <tr>
+                        <th>Match</th>
+                        <th>League</th>
+                        <th>Parameters Being Tracked</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for watch in watches %}
+
+                    <tr>
+
+                        <td>
+                            <a href="{% url 'watch-detail' watch.pk %}">
+                                <strong>
+                                    {{ watch.home_team }}
+                                    vs
+                                    {{ watch.away_team }}
+                                </strong>
+                            </a>
+                        </td>
+
+                        <td>
+                            {{ watch.league }}
+                        </td>
+
+                        <td>
+
+                            {% for parameter in watch.parameters.all %}
+
+                                <div class="mb-2">
+
+                                    <span class="badge bg-primary">
+                                        {{ parameter.get_parameter_display }}
+                                    </span>
+
+                                    <small class="text-muted">
+                                        Baseline:
+                                        {{ parameter.baseline }}
+
+                                        |
+
+                                        Threshold:
+                                        {{ parameter.threshold }}
+                                    </small>
+
+                                </div>
+
+                            {% empty %}
+
+                                <span class="text-muted">
+                                    No parameters configured
+                                </span>
+
+                            {% endfor %}
+
+                        </td>
+
+                        <td>
+
+                            {% if watch.active %}
+                                <span class="badge bg-success">
+                                    Active
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger">
+                                    Inactive
+                                </span>
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            <a href="{% url 'watch-detail' watch.pk %}"
+                               class="btn btn-sm btn-outline-primary">
+                                View
+                            </a>
+
+                            <a href="{% url 'watch-update' watch.pk %}"
+                               class="btn btn-sm btn-outline-secondary">
+                                Edit
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        {% else %}
+
+            <div class="alert alert-info">
+                No watches found.
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

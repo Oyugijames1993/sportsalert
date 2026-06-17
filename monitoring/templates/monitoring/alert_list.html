@@ -1,0 +1,110 @@
+{% extends "monitoring/base.html" %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <h1>Alerts</h1>
+
+    <a href="{% url 'clear-alerts' %}"
+       class="btn btn-danger"
+       onclick="return confirm('Clear all alerts?');">
+        Clear All Alerts
+    </a>
+
+</div>
+
+<div class="card shadow-sm">
+
+    <div class="card-body">
+
+        {% if alerts %}
+
+            <table class="table table-hover align-middle">
+
+                <thead>
+
+                    <tr>
+                        <th>Match</th>
+                        <th>Alert Type</th>
+                        <th>Message</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for alert in alerts %}
+
+                    <tr>
+
+                        <td>
+
+                            <a href="{% url 'watch-detail' alert.watch.pk %}">
+
+                                {{ alert.watch.home_team }}
+                                vs
+                                {{ alert.watch.away_team }}
+
+                            </a>
+
+                        </td>
+
+                        <td>
+
+                            {% if alert.alert_type == "UP" %}
+
+                                <span class="badge bg-success">
+                                    UP
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-danger">
+                                    DOWN
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+                            {{ alert.message }}
+                        </td>
+
+                        <td>
+                            {{ alert.created_at }}
+                        </td>
+
+                        <td>
+
+                            <a href="{% url 'alert-detail' alert.pk %}"
+                               class="btn btn-sm btn-outline-primary">
+                                View
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        {% else %}
+
+            <div class="alert alert-info">
+                No alerts available.
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

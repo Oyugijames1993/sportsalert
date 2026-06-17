@@ -1,0 +1,66 @@
+{% extends "monitoring/base.html" %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+
+    <div class="col-lg-6">
+
+        <div class="card shadow-sm border-danger">
+
+            <div class="card-header bg-danger text-white">
+                <h3 class="mb-0">
+                    Delete Watch
+                </h3>
+            </div>
+
+            <div class="card-body">
+
+                <p class="lead">
+                    Are you sure you want to delete this watch?
+                </p>
+
+                <div class="alert alert-warning">
+
+                    <strong>
+                        {{ object.home_team }}
+                        vs
+                        {{ object.away_team }}
+                    </strong>
+
+                    <br>
+
+                    {{ object.league }}
+
+                </div>
+
+                <p class="text-muted">
+                    This action cannot be undone.
+                </p>
+
+                <form method="post">
+
+                    {% csrf_token %}
+
+                    <button
+                        type="submit"
+                        class="btn btn-danger">
+                        Delete Watch
+                    </button>
+
+                    <a href="{% url 'watch-detail' object.pk %}"
+                       class="btn btn-secondary">
+                        Cancel
+                    </a>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

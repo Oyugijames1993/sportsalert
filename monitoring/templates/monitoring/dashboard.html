@@ -1,0 +1,212 @@
+{% extends "monitoring/base.html" %}
+
+{% block content %}
+
+<h1 class="mb-4">SportsAlert Dashboard</h1>
+
+<div class="row mb-4">
+
+    <div class="col-md-3">
+        <div class="card shadow-sm">
+            <div class="card-body text-center">
+                <h5>Total Watches</h5>
+                <h2>{{ watch_count }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm">
+            <div class="card-body text-center">
+                <h5>Active Watches</h5>
+                <h2>{{ active_watch_count }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm">
+            <div class="card-body text-center">
+                <h5>Total Alerts</h5>
+                <h2>{{ alert_count }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm">
+            <div class="card-body text-center">
+                <h5>Snapshots</h5>
+                <h2>{{ snapshot_count }}</h2>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="row">
+
+    <!-- Active Watches -->
+
+    <div class="col-lg-6">
+
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-header">
+                <h4 class="mb-0">Active Watches</h4>
+            </div>
+
+            <div class="card-body">
+
+                {% if active_watches %}
+
+                    <div class="list-group">
+
+                        {% for watch in active_watches %}
+
+                            <a href="{% url 'watch-detail' watch.pk %}"
+                               class="list-group-item list-group-item-action">
+
+                                <strong>
+                                    {{ watch.home_team }}
+                                    vs
+                                    {{ watch.away_team }}
+                                </strong>
+
+                                <br>
+
+                                <small class="text-muted">
+
+                                    {% for parameter in watch.parameters.all %}
+
+                                        {{ parameter.get_parameter_display }}
+
+                                        {% if not forloop.last %}
+                                            ,
+                                        {% endif %}
+
+                                    {% empty %}
+
+                                        No parameters configured
+
+                                    {% endfor %}
+
+                                </small>
+
+                            </a>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% else %}
+
+                    <p class="text-muted mb-0">
+                        No active watches.
+                    </p>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Recent Alerts -->
+
+    <div class="col-lg-6">
+
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-header">
+                <h4 class="mb-0">Recent Alerts</h4>
+            </div>
+
+            <div class="card-body">
+
+                {% if recent_alerts %}
+
+                    <div class="list-group">
+
+                        {% for alert in recent_alerts %}
+
+                            <a href="{% url 'alert-detail' alert.pk %}"
+                               class="list-group-item list-group-item-action">
+
+                                <div class="d-flex justify-content-between">
+
+                                    <strong>
+
+                                        {% if alert.alert_type == "UP" %}
+
+                                            <span class="badge bg-success">
+                                                UP
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="badge bg-danger">
+                                                DOWN
+                                            </span>
+
+                                        {% endif %}
+
+                                    </strong>
+
+                                    <small class="text-muted">
+                                        {{ alert.created_at }}
+                                    </small>
+
+                                </div>
+
+                                <div class="mt-2">
+                                    {{ alert.message }}
+                                </div>
+
+                            </a>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% else %}
+
+                    <p class="text-muted mb-0">
+                        No alerts generated yet.
+                    </p>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="row">
+
+    <div class="col">
+
+        <a href="{% url 'watch-create' %}"
+           class="btn btn-primary">
+            Create New Watch
+        </a>
+
+        <a href="{% url 'watch-list' %}"
+           class="btn btn-secondary">
+            View All Watches
+        </a>
+
+        <a href="{% url 'live-monitor' %}"
+           class="btn btn-success">
+            Live Monitor
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}

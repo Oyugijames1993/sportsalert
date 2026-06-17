@@ -1,0 +1,86 @@
+{% extends "monitoring/base.html" %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+
+    <div class="col-lg-8">
+
+        <div class="card shadow-sm">
+
+            <div class="card-header">
+
+                <h3 class="mb-0">
+                    Alert Details
+                </h3>
+
+            </div>
+
+            <div class="card-body">
+
+                <p>
+
+                    <strong>Match:</strong>
+
+                    <a href="{% url 'watch-detail' alert.watch.pk %}">
+                        {{ alert.watch.home_team }}
+                        vs
+                        {{ alert.watch.away_team }}
+                    </a>
+
+                </p>
+
+                <p>
+
+                    <strong>Alert Type:</strong>
+
+                    {% if alert.alert_type == "UP" %}
+
+                        <span class="badge bg-success">
+                            UP
+                        </span>
+
+                    {% else %}
+
+                        <span class="badge bg-danger">
+                            DOWN
+                        </span>
+
+                    {% endif %}
+
+                </p>
+
+                <p>
+
+                    <strong>Created:</strong>
+
+                    {{ alert.created_at }}
+
+                </p>
+
+                <hr>
+
+                <h5>
+                    Message
+                </h5>
+
+                <div class="alert alert-secondary">
+
+                    {{ alert.message }}
+
+                </div>
+
+                <a href="{% url 'alert-list' %}"
+                   class="btn btn-secondary">
+                    Back To Alerts
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
