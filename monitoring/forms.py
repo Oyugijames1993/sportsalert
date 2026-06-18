@@ -6,7 +6,6 @@ from .models import (
     WatchParameter,
 )
 
-
 class WatchForm(forms.ModelForm):
 
     class Meta:
@@ -18,6 +17,7 @@ class WatchForm(forms.ModelForm):
             "home_team",
             "away_team",
             "league",
+            "monitoring_start",
             "active",
         ]
 
@@ -49,6 +49,13 @@ class WatchForm(forms.ModelForm):
             "league": forms.TextInput(
                 attrs={
                     "class": "form-control"
+                }
+            ),
+
+            "monitoring_start": forms.DateTimeInput(
+                attrs={
+                    "class": "form-control",
+                    "type": "datetime-local",
                 }
             ),
 

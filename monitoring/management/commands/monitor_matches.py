@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+from django.utils import timezone
 
 from monitoring.models import Watch
 from monitoring.analytics import check_watch
@@ -11,12 +12,16 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
 
+        now = timezone.now()
+
         watches = Watch.objects.filter(
-            active=True
+            active=True,
+            monitoring_finished=False,
+            monitoring_start__lte=now
         )
 
         self.stdout.write(
-            f"Found {watches.count()} active watches"
+            f"Found {watches.count()} watch(es) ready for monitoring"
         )
 
         for watch in watches:
@@ -24,12 +29,44 @@ class Command(BaseCommand):
             try:
 
                 self.stdout.write(
-                    f"\nChecking game "
-                    f"{watch.match_id}"
+                    f"\nChecking game {watch.match_id}"
                 )
 
                 data = get_match_data(
                     watch.match_id
+                )
+
+                status = data.get(
+                    "status",
+                    ""
+                )
+
+                watch.game_status = status
+                watch.last_polled = now
+
+                if not watch.monitoring_started:
+                    watch.monitoring_started = True
+
+                # Stop monitoring if game finished
+                if status == "FT":
+
+                    watch.monitoring_finished = True
+                    watch.active = False
+
+                    watch.save()
+
+                    self.stdout.write(
+                        self.style.SUCCESS(
+                            f"Game {watch.match_id} finished. Monitoring stopped."
+                        )
+                    )
+
+                    continue
+
+                watch.save()
+
+                self.stdout.write(
+                    f"Status: {status}"
                 )
 
                 self.stdout.write(

@@ -36,6 +36,31 @@ class Watch(models.Model):
         default=True
     )
 
+    monitoring_start = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Time monitoring should begin"
+    )
+
+    monitoring_started = models.BooleanField(
+        default=False
+    )
+
+    monitoring_finished = models.BooleanField(
+        default=False
+    )
+
+    game_status = models.CharField(
+        max_length=20,
+        blank=True,
+        default=""
+    )
+
+    last_polled = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
     created_at = models.DateTimeField(
         auto_now_add=True
     )
