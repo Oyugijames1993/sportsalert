@@ -23,72 +23,6 @@
 
 </div>
 
-<!-- SUMMARY CARDS -->
-
-<div class="row mb-4">
-
-    <div class="col-md-4">
-
-        <div class="card shadow-sm">
-
-            <div class="card-body text-center">
-
-                <h6 class="text-muted">
-                    Baseline
-                </h6>
-
-                <h3>
-                    {{ baseline }}
-                </h3>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <div class="col-md-4">
-
-        <div class="card shadow-sm">
-
-            <div class="card-body text-center">
-
-                <h6 class="text-muted">
-                    Upper Threshold
-                </h6>
-
-                <h3>
-                    {{ upper_threshold }}
-                </h3>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <div class="col-md-4">
-
-        <div class="card shadow-sm">
-
-            <div class="card-body text-center">
-
-                <h6 class="text-muted">
-                    Lower Threshold
-                </h6>
-
-                <h3>
-                    {{ lower_threshold }}
-                </h3>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
 <!-- CHART -->
 
 <div class="card shadow-sm">
@@ -96,7 +30,7 @@
     <div class="card-header">
 
         <h5 class="mb-0">
-            Projection Trend
+            Projected Total Trend
         </h5>
 
     </div>
@@ -136,8 +70,9 @@
                         <tr>
                             <th>Minute</th>
                             <th>Projection</th>
-                            <th>Current Points</th>
+                            <th>Baseline</th>
                             <th>Deviation</th>
+                            <th>Current Points</th>
                             <th>Recorded</th>
                         </tr>
 
@@ -154,15 +89,29 @@
                             </td>
 
                             <td>
-                                {{ snapshot.projection }}
+                                {{ snapshot.projection|floatformat:2 }}
+                            </td>
+
+                            <td>
+                                {{ parameter.baseline|floatformat:2 }}
+                            </td>
+
+                            <td>
+
+                                {% if snapshot.deviation > 0 %}
+                                    <span class="text-success">
+                                        +{{ snapshot.deviation|floatformat:2 }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-danger">
+                                        {{ snapshot.deviation|floatformat:2 }}
+                                    </span>
+                                {% endif %}
+
                             </td>
 
                             <td>
                                 {{ snapshot.current_points }}
-                            </td>
-
-                            <td>
-                                {{ snapshot.deviation }}
                             </td>
 
                             <td>
@@ -190,7 +139,6 @@
     </div>
 
 </div>
-
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -238,31 +186,9 @@ const chart = new Chart(
 
                     borderWidth: 2,
 
-                    pointRadius: 0
-                },
+                    pointRadius: 0,
 
-                {
-                    label: "Upper Threshold",
-
-                    data: [],
-
-                    borderColor: "#fd7e14",
-
-                    borderDash: [8, 8],
-
-                    pointRadius: 0
-                },
-
-                {
-                    label: "Lower Threshold",
-
-                    data: [],
-
-                    borderColor: "#fd7e14",
-
-                    borderDash: [8, 8],
-
-                    pointRadius: 0
+                    borderDash: [8, 4]
                 }
 
             ]
@@ -306,7 +232,7 @@ const chart = new Chart(
 
                         display: true,
 
-                        text: "Projected Final Score"
+                        text: "Projected Final Total"
 
                     }
 
@@ -341,16 +267,6 @@ function loadChartData() {
         chart.data.datasets[1].data =
             data.labels.map(
                 () => data.baseline
-            );
-
-        chart.data.datasets[2].data =
-            data.labels.map(
-                () => data.upper_threshold
-            );
-
-        chart.data.datasets[3].data =
-            data.labels.map(
-                () => data.lower_threshold
             );
 
         chart.update();

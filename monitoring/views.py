@@ -447,7 +447,9 @@ def watch_data(request, watch_id):
         pk=watch_id
     )
 
-    parameter = watch.parameters.first()
+    parameter = (
+        watch.parameters.first()
+    )
 
     snapshots = (
         MatchSnapshot.objects
@@ -456,6 +458,7 @@ def watch_data(request, watch_id):
     )
 
     return JsonResponse({
+
         "labels": [
             s.minutes_played
             for s in snapshots
@@ -466,13 +469,20 @@ def watch_data(request, watch_id):
             for s in snapshots
         ],
 
-        "baseline": parameter.baseline,
+        "deviations": [
+            s.deviation
+            for s in snapshots
+        ],
 
-        "upper_threshold":
-            parameter.baseline +
+        "current_points": [
+            s.current_points
+            for s in snapshots
+        ],
+
+        "baseline":
+            parameter.baseline,
+
+        "threshold":
             parameter.threshold,
 
-        "lower_threshold":
-            parameter.baseline -
-            parameter.threshold,
     })

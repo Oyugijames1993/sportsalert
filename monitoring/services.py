@@ -39,7 +39,6 @@ def calculate_minutes_played(game):
 
     return None
 
-
 def get_match_data(match_id):
 
     url = (
@@ -111,12 +110,9 @@ def get_match_data(match_id):
         )
     )
 
+    # Game not started yet
     if minutes_played is None:
-
-        raise Exception(
-            f"Timer unavailable: "
-            f"{game['status']}"
-        )
+        minutes_played = 0
 
     return {
 
@@ -130,6 +126,7 @@ def get_match_data(match_id):
             game["status"]["short"]
 
     }
+
 
 
 def get_games_by_date(game_date):

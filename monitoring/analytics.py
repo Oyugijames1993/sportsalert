@@ -7,10 +7,11 @@ from .models import (
 def projected_total(
         current_points,
         minutes_played,
+        baseline,
         total_minutes=40):
 
     if minutes_played <= 0:
-        return 0
+        return baseline
 
     return (
         current_points /
@@ -92,6 +93,46 @@ def calculate_recent_scoring_rate(
         points_diff /
         minutes_diff
     )
+
+
+def projected_total_from_recent_rate(
+        watch,
+        current_points,
+        minutes_played,
+        baseline,
+        total_minutes=40):
+
+    recent_rate = (
+        calculate_recent_scoring_rate(
+            watch,
+            current_points,
+            minutes_played
+        )
+    )
+
+    if recent_rate is None:
+        return baseline
+
+    recent_projection = (
+        recent_rate *
+        total_minutes
+    )
+
+    weight = min(
+        minutes_played /
+        total_minutes,
+        1
+    )
+
+    projection = (
+        weight *
+        recent_projection
+        +
+        (1 - weight) *
+        baseline
+    )
+
+    return projection
 
 
 def save_snapshot(
@@ -234,9 +275,13 @@ def check_watch(
     if not parameter:
         return False
 
-    projection = projected_total(
-        current_points,
-        minutes_played
+    projection = (
+        projected_total_from_recent_rate(
+            watch,
+            current_points,
+            minutes_played,
+            parameter.baseline
+        )
     )
 
     deviation = calculate_deviation(
