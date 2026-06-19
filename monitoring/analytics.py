@@ -66,24 +66,43 @@ def calculate_recent_scoring_rate(
         current_points,
         minutes_played):
 
-    last_snapshot = (
+    snapshots = list(
         MatchSnapshot.objects
         .filter(watch=watch)
-        .order_by("-created_at")
-        .first()
+        .order_by("-created_at")[:10]
     )
 
-    if not last_snapshot:
+    if not snapshots:
         return None
+
+    target_window = 5
+
+    reference_snapshot = None
+
+    for snapshot in snapshots:
+
+        if (
+            minutes_played -
+            snapshot.minutes_played
+        ) >= target_window:
+
+            reference_snapshot = snapshot
+            break
+
+    if reference_snapshot is None:
+
+        reference_snapshot = (
+            snapshots[-1]
+        )
 
     points_diff = (
         current_points -
-        last_snapshot.current_points
+        reference_snapshot.current_points
     )
 
     minutes_diff = (
         minutes_played -
-        last_snapshot.minutes_played
+        reference_snapshot.minutes_played
     )
 
     if minutes_diff <= 0:
@@ -102,6 +121,13 @@ def projected_total_from_recent_rate(
         baseline,
         total_minutes=40):
 
+    expected_rate = (
+        expected_scoring_rate(
+            baseline,
+            total_minutes
+        )
+    )
+
     recent_rate = (
         calculate_recent_scoring_rate(
             watch,
@@ -111,25 +137,41 @@ def projected_total_from_recent_rate(
     )
 
     if recent_rate is None:
-        return baseline
+        recent_rate = expected_rate
 
-    recent_projection = (
-        recent_rate *
+    progress = (
+        minutes_played /
         total_minutes
     )
 
-    weight = min(
-        minutes_played /
-        total_minutes,
-        1
+    recent_weight = min(
+        progress,
+        0.8
+    )
+
+    expected_weight = (
+        1 -
+        recent_weight
+    )
+
+    blended_rate = (
+        expected_weight *
+        expected_rate
+        +
+        recent_weight *
+        recent_rate
+    )
+
+    remaining_minutes = max(
+        total_minutes -
+        minutes_played,
+        0
     )
 
     projection = (
-        weight *
-        recent_projection
-        +
-        (1 - weight) *
-        baseline
+        current_points +
+        blended_rate *
+        remaining_minutes
     )
 
     return projection
