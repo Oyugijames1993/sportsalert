@@ -61,6 +61,10 @@ class Watch(models.Model):
         blank=True
     )
 
+    total_game_minutes = models.IntegerField(
+        default=40
+    )
+
     created_at = models.DateTimeField(
         auto_now_add=True
     )
@@ -70,7 +74,6 @@ class Watch(models.Model):
             f"{self.home_team} vs "
             f"{self.away_team}"
         )
-
 
 class WatchParameter(models.Model):
 
@@ -122,6 +125,15 @@ class MatchSnapshot(models.Model):
         Watch,
         on_delete=models.CASCADE,
         related_name="snapshots"
+    )
+
+    game_clock = models.CharField(
+        max_length=20,
+        blank=True
+    )
+
+    elapsed_seconds = models.IntegerField(
+        default=0
     )
 
     current_points = models.FloatField()

@@ -42,15 +42,22 @@ class Command(BaseCommand):
                 )
 
                 watch.game_status = status
+
                 watch.last_polled = now
 
+                watch.total_game_minutes = (
+                    data["total_game_minutes"]
+                )
+
                 if not watch.monitoring_started:
+
                     watch.monitoring_started = True
 
                 # Stop monitoring if game finished
                 if status == "FT":
 
                     watch.monitoring_finished = True
+
                     watch.active = False
 
                     watch.save()
@@ -79,10 +86,27 @@ class Command(BaseCommand):
                     f"{data['minutes_played']}"
                 )
 
+                self.stdout.write(
+                    f"Game Clock: "
+                    f"{data['game_clock']}"
+                )
+
+                self.stdout.write(
+                    f"Elapsed Seconds: "
+                    f"{data['elapsed_seconds']}"
+                )
+
+                self.stdout.write(
+                    f"Total Game Minutes: "
+                    f"{data['total_game_minutes']}"
+                )
+
                 triggered = check_watch(
                     watch,
                     data["current_points"],
-                    data["minutes_played"]
+                    data["minutes_played"],
+                    data["elapsed_seconds"],
+                    data["game_clock"]
                 )
 
                 if triggered:

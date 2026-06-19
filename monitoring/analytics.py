@@ -29,7 +29,7 @@ def calculate_deviation(
 def expected_points_at_time(
         baseline,
         minutes_played,
-        total_minutes=40):
+        total_minutes):
 
     return (
         baseline *
@@ -40,7 +40,7 @@ def expected_points_at_time(
 
 def expected_scoring_rate(
         baseline,
-        total_minutes=40):
+        total_minutes):
 
     return (
         baseline /
@@ -119,7 +119,7 @@ def projected_total_from_recent_rate(
         current_points,
         minutes_played,
         baseline,
-        total_minutes=40):
+        total_minutes):
 
     expected_rate = (
         expected_scoring_rate(
@@ -183,12 +183,15 @@ def save_snapshot(
         current_points,
         projection,
         deviation,
-        minutes_played):
+        minutes_played,
+        elapsed_seconds,
+        game_clock):
 
     expected_points = (
         expected_points_at_time(
             parameter.baseline,
-            minutes_played
+            minutes_played,
+            watch.total_game_minutes
         )
     )
 
@@ -199,7 +202,8 @@ def save_snapshot(
 
     expected_rate = (
         expected_scoring_rate(
-            parameter.baseline
+            parameter.baseline,
+            watch.total_game_minutes
         )
     )
 
@@ -224,19 +228,32 @@ def save_snapshot(
     )
 
     MatchSnapshot.objects.create(
+
         watch=watch,
 
-        current_points=current_points,
+        game_clock=
+            game_clock,
 
-        expected_points=expected_points,
+        elapsed_seconds=
+            elapsed_seconds,
 
-        live_deviation=live_deviation,
+        current_points=
+            current_points,
 
-        projection=projection,
+        expected_points=
+            expected_points,
 
-        deviation=deviation,
+        live_deviation=
+            live_deviation,
 
-        minutes_played=minutes_played,
+        projection=
+            projection,
+
+        deviation=
+            deviation,
+
+        minutes_played=
+            minutes_played,
 
         expected_scoring_rate=
             expected_rate,
@@ -308,7 +325,9 @@ def should_create_alert(
 def check_watch(
         watch,
         current_points,
-        minutes_played):
+        minutes_played,
+        elapsed_seconds,
+        game_clock):
 
     parameter = (
         watch.parameters.first()
@@ -322,7 +341,8 @@ def check_watch(
             watch,
             current_points,
             minutes_played,
-            parameter.baseline
+            parameter.baseline,
+            watch.total_game_minutes
         )
     )
 
@@ -337,7 +357,9 @@ def check_watch(
         current_points,
         projection,
         deviation,
-        minutes_played
+        minutes_played,
+        elapsed_seconds,
+        game_clock
     )
 
     if abs(deviation) >= (

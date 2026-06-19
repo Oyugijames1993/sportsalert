@@ -5,40 +5,98 @@ from datetime import date
 from monitoring.models import Watch
 
 
+
+def get_total_game_minutes(game):
+
+    league_name = (
+        game["league"]["name"]
+        .lower()
+    )
+
+    if "nba" in league_name:
+        return 48
+
+    return 40
+
+
+def calculate_elapsed_seconds(game):
+
+    minutes_played = (
+        calculate_minutes_played(
+            game
+        )
+    )
+
+    if minutes_played is None:
+        return 0
+
+    return (
+        minutes_played * 60
+    )
 def calculate_minutes_played(game):
 
     status = game["status"]["short"]
 
     timer = game["status"]["timer"]
 
-    # Half Time
+    total_game_minutes = (
+        get_total_game_minutes(game)
+    )
+
+    quarter_length = (
+        total_game_minutes / 4
+    )
+
     if status == "HT":
-        return 20
+        return quarter_length * 2
 
-    # Full Time
     if status == "FT":
-        return 40
+        return total_game_minutes
 
-    # Unknown timer state
-    if timer is None:
+    if not timer:
         return None
 
-    timer = float(timer)
+    if ":" not in str(timer):
+        return None
 
-    if status == "Q1":
-        return timer
+    minutes_remaining, seconds_remaining = (
+        map(
+            int,
+            timer.split(":")
+        )
+    )
 
-    elif status == "Q2":
-        return 10 + timer
+    remaining = (
+        minutes_remaining +
+        (
+            seconds_remaining / 60
+        )
+    )
 
-    elif status == "Q3":
-        return 20 + timer
+    elapsed_in_quarter = (
+        quarter_length -
+        remaining
+    )
 
-    elif status == "Q4":
-        return 30 + timer
+    quarter_map = {
+        "Q1": 0,
+        "Q2": 1,
+        "Q3": 2,
+        "Q4": 3,
+    }
 
-    return None
+    if status not in quarter_map:
+        return None
 
+    completed_quarters = (
+        quarter_map[status]
+        * quarter_length
+    )
+
+    return (
+        completed_quarters +
+        elapsed_in_quarter
+    )
 def get_match_data(match_id):
 
     url = (
@@ -110,9 +168,56 @@ def get_match_data(match_id):
         )
     )
 
-    # Game not started yet
     if minutes_played is None:
         minutes_played = 0
+
+    total_game_minutes = (
+        get_total_game_minutes(
+            game
+        )
+    )
+
+    status_short = (
+        game["status"]["short"]
+    )
+
+    timer = (
+        game["status"]["timer"]
+    )
+
+    if timer:
+
+        game_clock = (
+            f"{status_short} "
+            f"{timer}"
+        )
+
+    else:
+
+        game_clock = (
+            status_short
+        )
+
+    elapsed_seconds = (
+        calculate_elapsed_seconds(
+            game
+        )
+    )
+
+    print(
+        "GAME CLOCK:",
+        game_clock
+    )
+
+    print(
+        "MINUTES PLAYED:",
+        minutes_played
+    )
+
+    print(
+        "ELAPSED SECONDS:",
+        elapsed_seconds
+    )
 
     return {
 
@@ -122,13 +227,19 @@ def get_match_data(match_id):
         "minutes_played":
             minutes_played,
 
+        "elapsed_seconds":
+            elapsed_seconds,
+
+        "game_clock":
+            game_clock,
+
         "status":
-            game["status"]["short"]
+            status_short,
+
+        "total_game_minutes":
+            total_game_minutes
 
     }
-
-
-
 def get_games_by_date(game_date):
 
     url = (
