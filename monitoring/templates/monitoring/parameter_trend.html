@@ -30,7 +30,7 @@
     <div class="card-header">
 
         <h5 class="mb-0">
-            Projected Total Trend
+            Expected Score vs Actual Score
         </h5>
 
     </div>
@@ -68,11 +68,10 @@
                     <thead>
 
                         <tr>
-                            <th>Minute</th>
-                            <th>Projection</th>
-                            <th>Baseline</th>
+                            <th>Elapsed Seconds</th>
+                            <th>Expected Score</th>
+                            <th>Actual Score</th>
                             <th>Deviation</th>
-                            <th>Current Points</th>
                             <th>Recorded</th>
                         </tr>
 
@@ -85,33 +84,29 @@
                         <tr>
 
                             <td>
-                                {{ snapshot.minutes_played }}
+                                {{ snapshot.elapsed_seconds }} seconds
                             </td>
 
                             <td>
-                                {{ snapshot.projection|floatformat:2 }}
+                                {{ snapshot.expected_points|floatformat:2 }}
                             </td>
 
                             <td>
-                                {{ parameter.baseline|floatformat:2 }}
+                                {{ snapshot.current_points|floatformat:2 }}
                             </td>
 
                             <td>
 
-                                {% if snapshot.deviation > 0 %}
+                                {% if snapshot.live_deviation > 0 %}
                                     <span class="text-success">
-                                        +{{ snapshot.deviation|floatformat:2 }}
+                                        +{{ snapshot.live_deviation|floatformat:2 }}
                                     </span>
                                 {% else %}
                                     <span class="text-danger">
-                                        {{ snapshot.deviation|floatformat:2 }}
+                                        {{ snapshot.live_deviation|floatformat:2 }}
                                     </span>
                                 {% endif %}
 
-                            </td>
-
-                            <td>
-                                {{ snapshot.current_points }}
                             </td>
 
                             <td>
@@ -152,35 +147,41 @@ const chart = new Chart(
 
     {
 
-        type: "line",
+        type: "scatter",
 
         data: {
-
-            labels: [],
 
             datasets: [
 
                 {
-                    label: "Projection",
+
+                    label: "Actual Score",
 
                     data: [],
 
-                    borderColor: "#0d6efd",
+                    showLine: true,
 
-                    backgroundColor:
-                        "rgba(13,110,253,0.1)",
+                    borderColor: "#198754",
 
-                    borderWidth: 3,
+                    backgroundColor: "#198754",
 
-                    tension: 0.3,
+                    borderWidth: 2,
 
-                    fill: false
+                    pointRadius: 2,
+
+                    pointHoverRadius: 4,
+
+                    tension: 0.1
+
                 },
 
                 {
-                    label: "Baseline",
+
+                    label: "Expected Score",
 
                     data: [],
+
+                    showLine: true,
 
                     borderColor: "#dc3545",
 
@@ -188,7 +189,8 @@ const chart = new Chart(
 
                     pointRadius: 0,
 
-                    borderDash: [8, 4]
+                    borderDash: [5, 5]
+
                 }
 
             ]
@@ -199,15 +201,41 @@ const chart = new Chart(
 
             responsive: true,
 
+            maintainAspectRatio: false,
+
+            animation: false,
+
             interaction: {
+
                 intersect: false,
-                mode: "index"
+
+                mode: "nearest"
+
             },
 
             plugins: {
 
                 legend: {
+
                     position: "top"
+
+                },
+
+                tooltip: {
+
+                    callbacks: {
+
+                        title: function(context) {
+
+                            return (
+                                "Seconds: " +
+                                context[0].parsed.x
+                            );
+
+                        }
+
+                    }
+
                 }
 
             },
@@ -216,11 +244,13 @@ const chart = new Chart(
 
                 x: {
 
+                    type: "linear",
+
                     title: {
 
                         display: true,
 
-                        text: "Minutes Played"
+                        text: "Elapsed Seconds"
 
                     }
 
@@ -232,7 +262,7 @@ const chart = new Chart(
 
                         display: true,
 
-                        text: "Projected Final Total"
+                        text: "Points"
 
                     }
 
@@ -258,15 +288,46 @@ function loadChartData() {
 
     .then(data => {
 
-        chart.data.labels =
-            data.labels;
-
         chart.data.datasets[0].data =
-            data.projections;
+
+            data.labels.map(
+
+                (
+                    seconds,
+                    index
+                ) => ({
+
+                    x:
+                        Number(seconds),
+
+                    y:
+                        Number(
+                            data.actual_points[index]
+                        )
+
+                })
+
+            );
 
         chart.data.datasets[1].data =
+
             data.labels.map(
-                () => data.baseline
+
+                (
+                    seconds,
+                    index
+                ) => ({
+
+                    x:
+                        Number(seconds),
+
+                    y:
+                        Number(
+                            data.expected_points[index]
+                        )
+
+                })
+
             );
 
         chart.update();

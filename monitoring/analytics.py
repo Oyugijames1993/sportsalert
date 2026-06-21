@@ -4,275 +4,89 @@ from .models import (
 )
 
 
-def projected_total(
-        current_points,
-        minutes_played,
+def expected_score_at_time(
         baseline,
-        total_minutes=40):
+        elapsed_seconds,
+        total_game_seconds):
 
-    if minutes_played <= 0:
-        return baseline
-
-    return (
-        current_points /
-        minutes_played
-    ) * total_minutes
-
-
-def calculate_deviation(
-        baseline,
-        projection):
-
-    return projection - baseline
-
-
-def expected_points_at_time(
-        baseline,
-        minutes_played,
-        total_minutes):
-
-    return (
-        baseline *
-        minutes_played /
-        total_minutes
-    )
-
-
-def expected_scoring_rate(
-        baseline,
-        total_minutes):
-
-    return (
-        baseline /
-        total_minutes
-    )
-
-
-def actual_scoring_rate(
-        current_points,
-        minutes_played):
-
-    if minutes_played <= 0:
+    if total_game_seconds <= 0:
         return 0
 
     return (
-        current_points /
-        minutes_played
+        baseline *
+        elapsed_seconds /
+        total_game_seconds
     )
-
-
-def calculate_recent_scoring_rate(
-        watch,
-        current_points,
-        minutes_played):
-
-    snapshots = list(
-        MatchSnapshot.objects
-        .filter(watch=watch)
-        .order_by("-created_at")[:10]
-    )
-
-    if not snapshots:
-        return None
-
-    target_window = 5
-
-    reference_snapshot = None
-
-    for snapshot in snapshots:
-
-        if (
-            minutes_played -
-            snapshot.minutes_played
-        ) >= target_window:
-
-            reference_snapshot = snapshot
-            break
-
-    if reference_snapshot is None:
-
-        reference_snapshot = (
-            snapshots[-1]
-        )
-
-    points_diff = (
-        current_points -
-        reference_snapshot.current_points
-    )
-
-    minutes_diff = (
-        minutes_played -
-        reference_snapshot.minutes_played
-    )
-
-    if minutes_diff <= 0:
-        return None
-
-    return (
-        points_diff /
-        minutes_diff
-    )
-
-
-def projected_total_from_recent_rate(
-        watch,
-        current_points,
-        minutes_played,
-        baseline,
-        total_minutes):
-
-    expected_rate = (
-        expected_scoring_rate(
-            baseline,
-            total_minutes
-        )
-    )
-
-    recent_rate = (
-        calculate_recent_scoring_rate(
-            watch,
-            current_points,
-            minutes_played
-        )
-    )
-
-    if recent_rate is None:
-        recent_rate = expected_rate
-
-    progress = (
-        minutes_played /
-        total_minutes
-    )
-
-    recent_weight = min(
-        progress,
-        0.8
-    )
-
-    expected_weight = (
-        1 -
-        recent_weight
-    )
-
-    blended_rate = (
-        expected_weight *
-        expected_rate
-        +
-        recent_weight *
-        recent_rate
-    )
-
-    remaining_minutes = max(
-        total_minutes -
-        minutes_played,
-        0
-    )
-
-    projection = (
-        current_points +
-        blended_rate *
-        remaining_minutes
-    )
-
-    return projection
 
 
 def save_snapshot(
         watch,
         parameter,
         current_points,
-        projection,
+        expected_score,
         deviation,
-        minutes_played,
         elapsed_seconds,
         game_clock):
 
-    expected_points = (
-        expected_points_at_time(
-            parameter.baseline,
-            minutes_played,
-            watch.total_game_minutes
-        )
-    )
-
-    live_deviation = (
-        current_points -
-        expected_points
+    total_game_seconds = (
+        watch.total_game_minutes * 60
     )
 
     expected_rate = (
-        expected_scoring_rate(
-            parameter.baseline,
-            watch.total_game_minutes
-        )
+        parameter.baseline /
+        total_game_seconds
+        if total_game_seconds > 0
+        else 0
     )
 
     actual_rate = (
-        actual_scoring_rate(
-            current_points,
-            minutes_played
-        )
-    )
-
-    rate_deviation = (
-        actual_rate -
-        expected_rate
-    )
-
-    recent_rate = (
-        calculate_recent_scoring_rate(
-            watch,
-            current_points,
-            minutes_played
-        )
+        current_points /
+        elapsed_seconds
+        if elapsed_seconds > 0
+        else 0
     )
 
     MatchSnapshot.objects.create(
 
         watch=watch,
 
-        game_clock=
-            game_clock,
+        game_clock=game_clock,
 
-        elapsed_seconds=
-            elapsed_seconds,
+        elapsed_seconds=elapsed_seconds,
 
-        current_points=
-            current_points,
+        current_points=current_points,
 
-        expected_points=
-            expected_points,
+        expected_points=expected_score,
 
-        live_deviation=
-            live_deviation,
+        live_deviation=deviation,
 
-        projection=
-            projection,
+        # Legacy fields retained for compatibility
+        projection=current_points,
 
-        deviation=
-            deviation,
+        deviation=deviation,
 
-        minutes_played=
-            minutes_played,
+        minutes_played=(
+            elapsed_seconds / 60
+        ),
 
-        expected_scoring_rate=
-            expected_rate,
+        expected_scoring_rate=expected_rate,
 
-        actual_scoring_rate=
-            actual_rate,
+        actual_scoring_rate=actual_rate,
 
-        scoring_rate_deviation=
-            rate_deviation,
+        scoring_rate_deviation=(
+            actual_rate -
+            expected_rate
+        ),
 
-        recent_scoring_rate=
-            recent_rate
+        recent_scoring_rate=actual_rate
     )
 
 
 def create_alert(
         watch,
         parameter,
-        projection,
+        expected_score,
+        current_points,
         deviation):
 
     direction = (
@@ -282,19 +96,24 @@ def create_alert(
     )
 
     message = (
-        f"{parameter.get_parameter_display()} moved "
-        f"{direction} by "
+        f"{parameter.get_parameter_display()} "
+        f"moved {direction} by "
         f"{abs(deviation):.2f} points "
-        f"(Baseline={parameter.baseline}, "
-        f"Projection={projection:.2f})"
+        f"(Expected={expected_score:.2f}, "
+        f"Actual={current_points:.2f}, "
+        f"Deviation={deviation:.2f})"
     )
 
     Alert.objects.create(
         watch=watch,
         parameter=parameter,
         alert_type=direction,
-        projection=projection,
+
+        # Legacy field retained
+        projection=current_points,
+
         deviation=deviation,
+
         message=message
     )
 
@@ -336,31 +155,47 @@ def check_watch(
     if not parameter:
         return False
 
-    projection = (
-        projected_total_from_recent_rate(
-            watch,
-            current_points,
-            minutes_played,
+    total_game_seconds = (
+        watch.total_game_minutes * 60
+    )
+
+    expected_score = (
+        expected_score_at_time(
             parameter.baseline,
-            watch.total_game_minutes
+            elapsed_seconds,
+            total_game_seconds
         )
     )
 
-    deviation = calculate_deviation(
-        parameter.baseline,
-        projection
+    deviation = (
+        current_points -
+        expected_score
     )
 
     save_snapshot(
         watch,
         parameter,
         current_points,
-        projection,
+        expected_score,
         deviation,
-        minutes_played,
         elapsed_seconds,
         game_clock
     )
+
+    print("\n====================")
+    print(
+        f"Expected Score: "
+        f"{expected_score:.2f}"
+    )
+    print(
+        f"Actual Score: "
+        f"{current_points:.2f}"
+    )
+    print(
+        f"Deviation: "
+        f"{deviation:.2f}"
+    )
+    print("====================\n")
 
     if abs(deviation) >= (
         parameter.threshold
@@ -373,7 +208,8 @@ def check_watch(
             create_alert(
                 watch,
                 parameter,
-                projection,
+                expected_score,
+                current_points,
                 deviation
             )
 

@@ -359,7 +359,7 @@ def parameter_trend(
     snapshots = (
         MatchSnapshot.objects
         .filter(watch=watch)
-        .order_by("minutes_played")
+        .order_by("elapsed_seconds")
     )
 
     context = {
@@ -447,42 +447,32 @@ def watch_data(request, watch_id):
         pk=watch_id
     )
 
-    parameter = (
-        watch.parameters.first()
-    )
-
     snapshots = (
         MatchSnapshot.objects
         .filter(watch=watch)
-        .order_by("minutes_played")
+        .order_by("elapsed_seconds")
     )
 
     return JsonResponse({
 
         "labels": [
-            s.minutes_played
+            s.elapsed_seconds
             for s in snapshots
         ],
 
-        "projections": [
-            s.projection
-            for s in snapshots
-        ],
-
-        "deviations": [
-            s.deviation
-            for s in snapshots
-        ],
-
-        "current_points": [
+        "actual_points": [
             s.current_points
             for s in snapshots
         ],
 
-        "baseline":
-            parameter.baseline,
+        "expected_points": [
+            s.expected_points
+            for s in snapshots
+        ],
 
-        "threshold":
-            parameter.threshold,
+        "deviations": [
+            s.live_deviation
+            for s in snapshots
+        ],
 
     })

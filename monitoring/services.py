@@ -56,28 +56,6 @@ def calculate_minutes_played(game):
     if not timer:
         return None
 
-    if ":" not in str(timer):
-        return None
-
-    minutes_remaining, seconds_remaining = (
-        map(
-            int,
-            timer.split(":")
-        )
-    )
-
-    remaining = (
-        minutes_remaining +
-        (
-            seconds_remaining / 60
-        )
-    )
-
-    elapsed_in_quarter = (
-        quarter_length -
-        remaining
-    )
-
     quarter_map = {
         "Q1": 0,
         "Q2": 1,
@@ -91,6 +69,34 @@ def calculate_minutes_played(game):
     completed_quarters = (
         quarter_map[status]
         * quarter_length
+    )
+
+    # API returns plain minute numbers
+    if ":" not in str(timer):
+
+        elapsed_in_quarter = float(timer)
+
+        return (
+            completed_quarters +
+            elapsed_in_quarter
+        )
+
+    # Fallback for MM:SS format
+    minutes_remaining, seconds_remaining = (
+        map(
+            int,
+            timer.split(":")
+        )
+    )
+
+    remaining = (
+        minutes_remaining +
+        (seconds_remaining / 60)
+    )
+
+    elapsed_in_quarter = (
+        quarter_length -
+        remaining
     )
 
     return (
