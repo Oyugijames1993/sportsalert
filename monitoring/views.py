@@ -26,6 +26,9 @@ from .forms import (
     WatchForm,
     WatchParameterFormSet,
 )
+from .team_analysis import (
+    analyse_match,
+)
 
 
 # ==========================================================
@@ -310,7 +313,10 @@ def watch_snapshots(request, watch_id):
 # TEAM STATISTICS
 # ==========================================================
 
-def watch_statistics(request, watch_id):
+def watch_statistics(
+    request,
+    watch_id
+):
 
     watch = get_object_or_404(
         Watch,
@@ -323,9 +329,18 @@ def watch_statistics(request, watch_id):
         .order_by("-created_at")
     )
 
+    analysis = analyse_match(
+        watch
+    )
+
     context = {
+
         "watch": watch,
+
         "statistics": statistics,
+
+        "analysis": analysis,
+
     }
 
     return render(
@@ -447,6 +462,8 @@ def watch_data(request, watch_id):
         pk=watch_id
     )
 
+    parameter = watch.parameters.first()
+
     snapshots = (
         MatchSnapshot.objects
         .filter(watch=watch)
@@ -474,5 +491,15 @@ def watch_data(request, watch_id):
             s.live_deviation
             for s in snapshots
         ],
+
+        "baseline": (
+            float(parameter.baseline)
+            if parameter
+            else 0
+        ),
+
+        "total_game_seconds": (
+            watch.total_game_minutes * 60
+        ),
 
     })

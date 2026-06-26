@@ -1,6 +1,4 @@
 from django.db import models
-
-
 class Watch(models.Model):
 
     SPORT_CHOICES = (
@@ -159,6 +157,16 @@ class MatchSnapshot(models.Model):
         blank=True
     )
 
+    bookmaker_total = models.FloatField(
+        null=True,
+        blank=True
+    )
+
+    bookmaker_spread = models.FloatField(
+        null=True,
+        blank=True
+    )
+
     created_at = models.DateTimeField(
         auto_now_add=True
     )
@@ -166,12 +174,17 @@ class MatchSnapshot(models.Model):
     class Meta:
         ordering = ["created_at"]
 
-
 class TeamStatistic(models.Model):
 
     watch = models.ForeignKey(
         Watch,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name="team_statistics"
+    )
+
+    team_id = models.IntegerField(
+        null=True,
+        blank=True
     )
 
     team_name = models.CharField(
@@ -182,11 +195,21 @@ class TeamStatistic(models.Model):
         default=0
     )
 
-    two_pt_made = models.IntegerField(
+    # ---------- Raw API Statistics ----------
+
+    field_goal_points = models.IntegerField(
         default=0
     )
 
-    two_pt_attempted = models.IntegerField(
+    field_goal_made = models.IntegerField(
+        default=0
+    )
+
+    field_goal_attempted = models.IntegerField(
+        default=0
+    )
+
+    field_goal_percentage = models.FloatField(
         default=0
     )
 
@@ -198,6 +221,10 @@ class TeamStatistic(models.Model):
         default=0
     )
 
+    three_pt_percentage = models.FloatField(
+        default=0
+    )
+
     free_throw_made = models.IntegerField(
         default=0
     )
@@ -206,11 +233,109 @@ class TeamStatistic(models.Model):
         default=0
     )
 
+    free_throw_percentage = models.FloatField(
+        default=0
+    )
+
+    rebounds = models.IntegerField(
+        default=0
+    )
+
+    assists = models.IntegerField(
+        default=0
+    )
+
+    steals = models.IntegerField(
+        default=0
+    )
+
+    blocks = models.IntegerField(
+        default=0
+    )
+
+    turnovers = models.IntegerField(
+        default=0
+    )
+
+    # ---------- Derived Analytics ----------
+
+    estimated_possessions = models.FloatField(
+        default=0
+    )
+
+    points_per_possession = models.FloatField(
+        default=0
+    )
+
+    offensive_rating = models.FloatField(
+        default=0
+    )
+
+    pace = models.FloatField(
+        default=0
+    )
+
+    projected_points = models.FloatField(
+        default=0
+    )
+
+    # ---------- Snapshot Information ----------
+
+    quarter = models.IntegerField(
+        default=0
+    )
+
+    game_status = models.CharField(
+        max_length=10,
+        blank=True
+    )
+
+    game_minute = models.FloatField(
+        default=0
+    )
+
+    game_clock = models.CharField(
+        max_length=20,
+        blank=True
+    )
+
+    elapsed_seconds = models.IntegerField(
+        default=0
+    )
+
+    bookmaker_total = models.FloatField(
+        null=True,
+        blank=True
+    )
+
     created_at = models.DateTimeField(
         auto_now_add=True
     )
 
+    class Meta:
+        ordering = ["created_at"]
 
+    @property
+    def shooting_percentage(self):
+
+        if self.field_goal_attempted == 0:
+            return 0
+
+        return round(
+            (
+                self.field_goal_made /
+                self.field_goal_attempted
+            ) * 100,
+            2
+        )
+
+    def __str__(self):
+
+        return (
+            f"{self.team_name} "
+            f"(Q{self.quarter}) "
+            f"{self.points} pts"
+        )
 class Alert(models.Model):
 
     ALERT_TYPES = (
@@ -220,12 +345,14 @@ class Alert(models.Model):
 
     watch = models.ForeignKey(
         Watch,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name="alerts"
     )
 
     parameter = models.ForeignKey(
         WatchParameter,
         on_delete=models.CASCADE,
+        related_name="alerts",
         null=True,
         blank=True
     )

@@ -2,27 +2,1067 @@
 
 {% block content %}
 
-<h1 class="mb-4">
-    Team Statistics
-</h1>
+<div class="container-fluid">
 
-<div class="card shadow-sm">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2>
+                {{ watch.home_team }}
+                vs
+                {{ watch.away_team }}
+            </h2>
+
+            <p class="text-muted mb-0">
+                {{ watch.league }}
+            </p>
+
+        </div>
+
+        {% if analysis %}
+
+        <div class="text-end">
+
+            <h5 class="mb-1">
+                Projected Total
+            </h5>
+
+            <h2 class="text-primary">
+                {{ analysis.projected_total }}
+            </h2>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+
+{% if analysis %}
+
+<div class="row">
+
+    <!-- HOME TEAM -->
+
+    <div class="col-lg-6 mb-4">
+
+        <div class="card shadow">
+
+            <div class="card-header bg-primary text-white">
+
+                <h4 class="mb-0">
+
+                    {{ analysis.home.team.name }}
+
+                </h4>
+
+            </div>
+
+            <div class="card-body">
+
+                <!-- SCORE -->
+
+                <h5 class="border-bottom pb-2">
+
+                    Score
+
+                </h5>
+
+                <table class="table table-sm">
+
+                    <tr>
+
+                        <th>Current Points</th>
+
+                        <td>
+
+                            {{ analysis.home.score.points }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>Projected Points</th>
+
+                        <td>
+
+                            {{ analysis.home.score.projected_points }}
+
+                        </td>
+
+                    </tr>
+
+                </table>
+
+
+                <!-- FIELD GOALS -->
+
+                <h5 class="border-bottom pb-2">
+
+                    Field Goals
+
+                </h5>
+
+                <table class="table table-sm">
+
+                    <tr>
+
+                        <th>Points</th>
+
+                        <td>
+
+                            {{ analysis.home.shooting.field_goals.points }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>Made</th>
+
+                        <td>
+
+                            {{ analysis.home.shooting.field_goals.made }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>Attempted</th>
+
+                        <td>
+
+                            {{ analysis.home.shooting.field_goals.attempted }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>FG%</th>
+
+                        <td>
+
+                            {{ analysis.home.shooting.field_goals.percentage }}%
+
+                        </td>
+
+                    </tr>
+
+                </table>
+
+
+                <!-- THREE POINTERS -->
+
+                <h5 class="border-bottom pb-2">
+
+                    Three Pointers
+
+                </h5>
+
+                <table class="table table-sm">
+
+                    <tr>
+
+                        <th>Made</th>
+
+                        <td>
+
+                            {{ analysis.home.shooting.three_pointers.made }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>Attempted</th>
+
+                        <td>
+
+                            {{ analysis.home.shooting.three_pointers.attempted }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>3PT%</th>
+
+                        <td>
+
+                            {{ analysis.home.shooting.three_pointers.percentage }}%
+
+                        </td>
+
+                    </tr>
+
+                </table>
+
+
+                <!-- FREE THROWS -->
+
+                <h5 class="border-bottom pb-2">
+
+                    Free Throws
+
+                </h5>
+
+                <table class="table table-sm">
+
+                    <tr>
+
+                        <th>Made</th>
+
+                        <td>
+
+                            {{ analysis.home.shooting.free_throws.made }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>Attempted</th>
+
+                        <td>
+
+                            {{ analysis.home.shooting.free_throws.attempted }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>FT%</th>
+
+                        <td>
+
+                            {{ analysis.home.shooting.free_throws.percentage }}%
+
+                        </td>
+
+                    </tr>
+
+                </table>
+
+                                <!-- BALL CONTROL -->
+
+                <h5 class="border-bottom pb-2">
+
+                    Ball Control
+
+                </h5>
+
+                <table class="table table-sm">
+
+                    <tr>
+
+                        <th>Assists</th>
+
+                        <td>
+
+                            {{ analysis.home.ball_control.assists }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>Turnovers</th>
+
+                        <td>
+
+                            {{ analysis.home.ball_control.turnovers }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>Assist / Turnover</th>
+
+                        <td>
+
+                            {{ analysis.home.ball_control.assist_turnover_ratio }}
+
+                        </td>
+
+                    </tr>
+
+                </table>
+
+
+                <!-- DEFENSE -->
+
+                <h5 class="border-bottom pb-2">
+
+                    Defense
+
+                </h5>
+
+                <table class="table table-sm">
+
+                    <tr>
+
+                        <th>Rebounds</th>
+
+                        <td>
+
+                            {{ analysis.home.defense.rebounds }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>Steals</th>
+
+                        <td>
+
+                            {{ analysis.home.defense.steals }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>Blocks</th>
+
+                        <td>
+
+                            {{ analysis.home.defense.blocks }}
+
+                        </td>
+
+                    </tr>
+
+                </table>
+
+
+                <!-- ADVANCED METRICS -->
+
+                <h5 class="border-bottom pb-2">
+
+                    Advanced Metrics
+
+                </h5>
+
+                <table class="table table-sm">
+
+                    <tr>
+
+                        <th>Estimated Possessions</th>
+
+                        <td>
+
+                            {{ analysis.home.advanced_metrics.estimated_possessions }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>Points / Possession</th>
+
+                        <td>
+
+                            {{ analysis.home.advanced_metrics.points_per_possession }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>Offensive Rating</th>
+
+                        <td>
+
+                            {{ analysis.home.advanced_metrics.offensive_rating }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>Pace</th>
+
+                        <td>
+
+                            {{ analysis.home.advanced_metrics.pace }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>3PT Rate</th>
+
+                        <td>
+
+                            {{ analysis.home.team_style.three_point_rate }}%
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>FT Rate</th>
+
+                        <td>
+
+                            {{ analysis.home.team_style.free_throw_rate }}%
+
+                        </td>
+
+                    </tr>
+
+                </table>
+
+
+                <!-- SHOT DISTRIBUTION -->
+
+                <h5 class="border-bottom pb-2">
+
+                    Shot Distribution
+
+                </h5>
+
+                <table class="table table-sm">
+
+                    <tr>
+
+                        <th>2PT</th>
+
+                        <td>
+
+                            {{ analysis.home.shot_distribution.two_point_made }}/{{ analysis.home.shot_distribution.two_point_attempted }}
+
+                            ({{ analysis.home.shot_distribution.two_point_percentage }}%)
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>3PT</th>
+
+                        <td>
+
+                            {{ analysis.home.shot_distribution.three_point_made }}/{{ analysis.home.shot_distribution.three_point_attempted }}
+
+                            ({{ analysis.home.shot_distribution.three_point_percentage }}%)
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>FT</th>
+
+                        <td>
+
+                            {{ analysis.home.shot_distribution.free_throw_made }}/{{ analysis.home.shot_distribution.free_throw_attempted }}
+
+                            ({{ analysis.home.shot_distribution.free_throw_percentage }}%)
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>2PT Scoring Share</th>
+
+                        <td>
+
+                            {{ analysis.home.shot_distribution.two_point_scoring_share }}%
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>3PT Scoring Share</th>
+
+                        <td>
+
+                            {{ analysis.home.shot_distribution.three_point_scoring_share }}%
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>FT Scoring Share</th>
+
+                        <td>
+
+                            {{ analysis.home.shot_distribution.free_throw_scoring_share }}%
+
+                        </td>
+
+                    </tr>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- AWAY TEAM -->
+
+    <div class="col-lg-6 mb-4">
+
+        <div class="card shadow">
+
+            <div class="card-header bg-success text-white">
+
+                <h4 class="mb-0">
+
+                    {{ analysis.away.team.name }}
+
+                </h4>
+
+            </div>
+
+            <div class="card-body">
+                                <!-- SCORE -->
+
+                <h5 class="border-bottom pb-2">
+
+                    Score
+
+                </h5>
+
+                <table class="table table-sm">
+
+                    <tr>
+
+                        <th>Current Points</th>
+
+                        <td>
+
+                            {{ analysis.away.score.points }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>Projected Points</th>
+
+                        <td>
+
+                            {{ analysis.away.score.projected_points }}
+
+                        </td>
+
+                    </tr>
+
+                </table>
+
+                <!-- FIELD GOALS -->
+
+                <h5 class="border-bottom pb-2">
+
+                    Field Goals
+
+                </h5>
+
+                <table class="table table-sm">
+
+                    <tr>
+
+                        <th>Points</th>
+
+                        <td>
+
+                            {{ analysis.away.shooting.field_goals.points }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>Made</th>
+
+                        <td>
+
+                            {{ analysis.away.shooting.field_goals.made }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>Attempted</th>
+
+                        <td>
+
+                            {{ analysis.away.shooting.field_goals.attempted }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>FG%</th>
+
+                        <td>
+
+                            {{ analysis.away.shooting.field_goals.percentage }}%
+
+                        </td>
+
+                    </tr>
+
+                </table>
+
+                <!-- THREE POINTERS -->
+
+                <h5 class="border-bottom pb-2">
+
+                    Three Pointers
+
+                </h5>
+
+                <table class="table table-sm">
+
+                    <tr>
+
+                        <th>Made</th>
+
+                        <td>
+
+                            {{ analysis.away.shooting.three_pointers.made }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>Attempted</th>
+
+                        <td>
+
+                            {{ analysis.away.shooting.three_pointers.attempted }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>3PT%</th>
+
+                        <td>
+
+                            {{ analysis.away.shooting.three_pointers.percentage }}%
+
+                        </td>
+
+                    </tr>
+
+                </table>
+
+                <!-- FREE THROWS -->
+
+                <h5 class="border-bottom pb-2">
+
+                    Free Throws
+
+                </h5>
+
+                <table class="table table-sm">
+
+                    <tr>
+
+                        <th>Made</th>
+
+                        <td>
+
+                            {{ analysis.away.shooting.free_throws.made }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>Attempted</th>
+
+                        <td>
+
+                            {{ analysis.away.shooting.free_throws.attempted }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>FT%</th>
+
+                        <td>
+
+                            {{ analysis.away.shooting.free_throws.percentage }}%
+
+                        </td>
+
+                    </tr>
+
+                </table>
+
+                <!-- BALL CONTROL -->
+
+                <h5 class="border-bottom pb-2">
+
+                    Ball Control
+
+                </h5>
+
+                <table class="table table-sm">
+
+                    <tr>
+
+                        <th>Assists</th>
+
+                        <td>
+
+                            {{ analysis.away.ball_control.assists }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>Turnovers</th>
+
+                        <td>
+
+                            {{ analysis.away.ball_control.turnovers }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>Assist / Turnover</th>
+
+                        <td>
+
+                            {{ analysis.away.ball_control.assist_turnover_ratio }}
+
+                        </td>
+
+                    </tr>
+
+                </table>
+
+                <!-- DEFENSE -->
+
+                <h5 class="border-bottom pb-2">
+
+                    Defense
+
+                </h5>
+
+                <table class="table table-sm">
+
+                    <tr>
+
+                        <th>Rebounds</th>
+
+                        <td>
+
+                            {{ analysis.away.defense.rebounds }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>Steals</th>
+
+                        <td>
+
+                            {{ analysis.away.defense.steals }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>Blocks</th>
+
+                        <td>
+
+                            {{ analysis.away.defense.blocks }}
+
+                        </td>
+
+                    </tr>
+
+                </table>
+
+                <!-- ADVANCED METRICS -->
+
+                <h5 class="border-bottom pb-2">
+
+                    Advanced Metrics
+
+                </h5>
+
+                <table class="table table-sm">
+
+                    <tr>
+
+                        <th>Estimated Possessions</th>
+
+                        <td>
+
+                            {{ analysis.away.advanced_metrics.estimated_possessions }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>Points / Possession</th>
+
+                        <td>
+
+                            {{ analysis.away.advanced_metrics.points_per_possession }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>Offensive Rating</th>
+
+                        <td>
+
+                            {{ analysis.away.advanced_metrics.offensive_rating }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>Pace</th>
+
+                        <td>
+
+                            {{ analysis.away.advanced_metrics.pace }}
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>3PT Rate</th>
+
+                        <td>
+
+                            {{ analysis.away.team_style.three_point_rate }}%
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>FT Rate</th>
+
+                        <td>
+
+                            {{ analysis.away.team_style.free_throw_rate }}%
+
+                        </td>
+
+                    </tr>
+
+                </table>
+
+                <!-- SHOT DISTRIBUTION -->
+
+                <h5 class="border-bottom pb-2">
+
+                    Shot Distribution
+
+                </h5>
+
+                <table class="table table-sm">
+
+                    <tr>
+
+                        <th>2PT</th>
+
+                        <td>
+
+                            {{ analysis.away.shot_distribution.two_point_made }}/{{ analysis.away.shot_distribution.two_point_attempted }}
+
+                            ({{ analysis.away.shot_distribution.two_point_percentage }}%)
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>3PT</th>
+
+                        <td>
+
+                            {{ analysis.away.shot_distribution.three_point_made }}/{{ analysis.away.shot_distribution.three_point_attempted }}
+
+                            ({{ analysis.away.shot_distribution.three_point_percentage }}%)
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>FT</th>
+
+                        <td>
+
+                            {{ analysis.away.shot_distribution.free_throw_made }}/{{ analysis.away.shot_distribution.free_throw_attempted }}
+
+                            ({{ analysis.away.shot_distribution.free_throw_percentage }}%)
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>2PT Scoring Share</th>
+
+                        <td>
+
+                            {{ analysis.away.shot_distribution.two_point_scoring_share }}%
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>3PT Scoring Share</th>
+
+                        <td>
+
+                            {{ analysis.away.shot_distribution.three_point_scoring_share }}%
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+
+                        <th>FT Scoring Share</th>
+
+                        <td>
+
+                            {{ analysis.away.shot_distribution.free_throw_scoring_share }}%
+
+                        </td>
+
+                    </tr>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endif %}
+
+<hr>
+
+<h3 class="mt-4">
+
+    Snapshot History
+
+</h3>
+
+<div class="card shadow">
 
     <div class="card-body">
 
-        {% if statistics %}
-
-        <table class="table table-bordered">
+        <table class="table table-bordered table-striped">
 
             <thead>
 
                 <tr>
+
                     <th>Team</th>
+
                     <th>Points</th>
-                    <th>2PT</th>
+
+                    <th>FG</th>
+
                     <th>3PT</th>
+
                     <th>FT</th>
-                    <th>Updated</th>
+
+                    <th>Rebounds</th>
+
+                    <th>Assists</th>
+
+                    <th>Turnovers</th>
+
+                    <th>Minute</th>
+
+                    <th>Clock</th>
+
                 </tr>
 
             </thead>
@@ -33,28 +1073,48 @@
 
                 <tr>
 
+                    <td>{{ stat.team_name }}</td>
+
+                    <td>{{ stat.points }}</td>
+
                     <td>
-                        {{ stat.team_name }}
+
+                        {{ stat.field_goal_made }}/{{ stat.field_goal_attempted }}
+
                     </td>
 
                     <td>
-                        {{ stat.points }}
-                    </td>
 
-                    <td>
-                        {{ stat.two_pt_made }}/{{ stat.two_pt_attempted }}
-                    </td>
-
-                    <td>
                         {{ stat.three_pt_made }}/{{ stat.three_pt_attempted }}
+
                     </td>
 
                     <td>
+
                         {{ stat.free_throw_made }}/{{ stat.free_throw_attempted }}
+
                     </td>
 
-                    <td>
-                        {{ stat.created_at }}
+                    <td>{{ stat.rebounds }}</td>
+
+                    <td>{{ stat.assists }}</td>
+
+                    <td>{{ stat.turnovers }}</td>
+
+                    <td>{{ stat.game_minute }}</td>
+
+                    <td>{{ stat.game_clock }}</td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+
+                    <td colspan="10" class="text-center">
+
+                        No statistics available.
+
                     </td>
 
                 </tr>
@@ -65,15 +1125,9 @@
 
         </table>
 
-        {% else %}
-
-        <div class="alert alert-info">
-            No statistics available.
-        </div>
-
-        {% endif %}
-
     </div>
+
+</div>
 
 </div>
 

@@ -30,16 +30,18 @@
     <div class="card-header">
 
         <h5 class="mb-0">
-            Expected Score vs Actual Score
+            Bookmaker Projection vs Actual Score
         </h5>
 
     </div>
 
     <div class="card-body">
 
-        <canvas id="trendChart"
-                height="120">
-        </canvas>
+        <div style="height:600px;">
+
+            <canvas id="trendChart"></canvas>
+
+        </div>
 
     </div>
 
@@ -165,11 +167,11 @@ const chart = new Chart(
 
                     backgroundColor: "#198754",
 
-                    borderWidth: 2,
+                    borderWidth: 3,
 
-                    pointRadius: 2,
+                    pointRadius: 3,
 
-                    pointHoverRadius: 4,
+                    pointHoverRadius: 6,
 
                     tension: 0.1
 
@@ -177,7 +179,7 @@ const chart = new Chart(
 
                 {
 
-                    label: "Expected Score",
+                    label: "Bookmaker Projection",
 
                     data: [],
 
@@ -185,11 +187,29 @@ const chart = new Chart(
 
                     borderColor: "#dc3545",
 
-                    borderWidth: 2,
+                    borderWidth: 3,
 
                     pointRadius: 0,
 
-                    borderDash: [5, 5]
+                    borderDash: [10, 5]
+
+                },
+
+                {
+
+                    label: "Deviation",
+
+                    data: [],
+
+                    showLine: true,
+
+                    borderColor: "#0d6efd",
+
+                    borderWidth: 2,
+
+                    pointRadius: 1,
+
+                    yAxisID: "y1"
 
                 }
 
@@ -266,6 +286,26 @@ const chart = new Chart(
 
                     }
 
+                },
+
+                y1: {
+
+                    position: "right",
+
+                    grid: {
+
+                        drawOnChartArea: false
+
+                    },
+
+                    title: {
+
+                        display: true,
+
+                        text: "Deviation"
+
+                    }
+
                 }
 
             }
@@ -291,43 +331,33 @@ function loadChartData() {
         chart.data.datasets[0].data =
 
             data.labels.map(
-
-                (
-                    seconds,
-                    index
-                ) => ({
-
-                    x:
-                        Number(seconds),
-
-                    y:
-                        Number(
-                            data.actual_points[index]
-                        )
-
+                (seconds, index) => ({
+                    x: Number(seconds),
+                    y: Number(data.actual_points[index])
                 })
-
             );
 
-        chart.data.datasets[1].data =
+        chart.data.datasets[1].data = [
+
+            {
+                x: 0,
+                y: 0
+            },
+
+            {
+                x: Number(data.total_game_seconds),
+                y: Number(data.baseline)
+            }
+
+        ];
+
+        chart.data.datasets[2].data =
 
             data.labels.map(
-
-                (
-                    seconds,
-                    index
-                ) => ({
-
-                    x:
-                        Number(seconds),
-
-                    y:
-                        Number(
-                            data.expected_points[index]
-                        )
-
+                (seconds, index) => ({
+                    x: Number(seconds),
+                    y: Number(data.deviations[index])
                 })
-
             );
 
         chart.update();
@@ -349,7 +379,7 @@ loadChartData();
 
 setInterval(
     loadChartData,
-    5000
+    60000
 );
 
 </script>

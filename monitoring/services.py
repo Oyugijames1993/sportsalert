@@ -3,6 +3,7 @@ import requests
 from django.conf import settings
 from datetime import date
 from monitoring.models import Watch
+from monitoring.models import TeamStatistic
 
 
 
@@ -32,6 +33,25 @@ def calculate_elapsed_seconds(game):
 
     return (
         minutes_played * 60
+    )
+
+def get_current_quarter(game):
+
+    status = game["status"]["short"]
+
+    mapping = {
+
+        "Q1": 1,
+        "Q2": 2,
+        "Q3": 3,
+        "Q4": 4,
+        "OT": 5,
+
+    }
+
+    return mapping.get(
+        status,
+        0
     )
 def calculate_minutes_played(game):
 
@@ -210,6 +230,12 @@ def get_match_data(match_id):
         )
     )
 
+    quarter = (
+        get_current_quarter(
+            game
+        )
+    )
+
     print(
         "GAME CLOCK:",
         game_clock
@@ -223,6 +249,11 @@ def get_match_data(match_id):
     print(
         "ELAPSED SECONDS:",
         elapsed_seconds
+    )
+
+    print(
+        "QUARTER:",
+        quarter
     )
 
     return {
@@ -242,10 +273,167 @@ def get_match_data(match_id):
         "status":
             status_short,
 
+        "quarter":
+            quarter,
+
         "total_game_minutes":
             total_game_minutes
 
     }
+
+
+
+def get_team_statistics(game_id):
+
+    url = (
+        "https://v1.basketball.api-sports.io/"
+        "games/statistics/teams"
+    )
+
+    headers = {
+        "x-apisports-key":
+            settings.API_SPORTS_KEY
+    }
+
+    response = requests.get(
+        url,
+        headers=headers,
+        params={"id": game_id},
+        timeout=30
+    )
+
+    response.raise_for_status()
+
+    data = response.json()
+
+    if data["results"] == 0:
+
+        print(
+            f"No team statistics available "
+            f"for game {game_id}."
+        )
+
+        return None
+
+    return data
+
+def save_team_statistics(
+    watch,
+    game_id,
+    minutes_played=0,
+    game_clock="",
+    elapsed_seconds=0,
+    bookmaker_total=None,
+    quarter=0,
+    game_status=""
+):
+    data = get_team_statistics(game_id)
+
+    if data is None:
+        return
+
+    total_game_minutes = watch.total_game_minutes
+
+    for index, team in enumerate(data["response"]):
+
+        fg_attempts = team["field_goals"].get("attempts") or 0
+        fg_made = team["field_goals"].get("total") or 0
+        fg_percentage = float(team["field_goals"].get("percentage") or 0)
+
+        three_attempts = team["threepoint_goals"].get("attempts") or 0
+        three_made = team["threepoint_goals"].get("total") or 0
+        three_percentage = float(team["threepoint_goals"].get("percentage") or 0)
+
+        ft_attempts = team["freethrows_goals"].get("attempts") or 0
+        ft_made = team["freethrows_goals"].get("total") or 0
+        ft_percentage = float(team["freethrows_goals"].get("percentage") or 0)
+
+        field_goal_points = ((fg_made - three_made) * 2) + (three_made * 3)
+        points = field_goal_points + ft_made
+
+        possessions = round(
+            fg_attempts + (0.44 * ft_attempts) + (team.get("turnovers") or 0),
+            2
+        )
+
+        if possessions > 0:
+            ppp = round(points / possessions, 3)
+            offensive_rating = round(ppp * 100, 2)
+        else:
+            ppp = 0
+            offensive_rating = 0
+
+        if minutes_played > 0:
+            pace = round((possessions / minutes_played) * total_game_minutes, 2)
+            projected_points = round((points / minutes_played) * total_game_minutes, 2)
+        else:
+            pace = 0
+            projected_points = 0
+
+        team_name = watch.home_team if index == 0 else watch.away_team
+
+        rebounds = team["rebounds"].get("total") or 0
+        assists = team.get("assists") or 0
+        steals = team.get("steals") or 0
+        blocks = team.get("blocks") or 0
+        turnovers = team.get("turnovers") or 0
+
+        latest = (
+            TeamStatistic.objects
+            .filter(watch=watch, team_id=team["team"]["id"])
+            .order_by("-created_at")
+            .first()
+        )
+
+        if latest and (
+            latest.points == points and
+            latest.field_goal_made == fg_made and
+            latest.field_goal_attempted == fg_attempts and
+            latest.three_pt_made == three_made and
+            latest.three_pt_attempted == three_attempts and
+            latest.free_throw_made == ft_made and
+            latest.free_throw_attempted == ft_attempts and
+            latest.rebounds == rebounds and
+            latest.assists == assists and
+            latest.steals == steals and
+            latest.blocks == blocks and
+            latest.turnovers == turnovers
+        ):
+            continue
+
+        TeamStatistic.objects.create(
+            watch=watch,
+            team_id=team["team"]["id"],
+            team_name=team_name,
+            points=points,
+            field_goal_points=field_goal_points,
+            field_goal_made=fg_made,
+            field_goal_attempted=fg_attempts,
+            field_goal_percentage=fg_percentage,
+            three_pt_made=three_made,
+            three_pt_attempted=three_attempts,
+            three_pt_percentage=three_percentage,
+            free_throw_made=ft_made,
+            free_throw_attempted=ft_attempts,
+            free_throw_percentage=ft_percentage,
+            rebounds=rebounds,
+            assists=assists,
+            steals=steals,
+            blocks=blocks,
+            turnovers=turnovers,
+            estimated_possessions=possessions,
+            points_per_possession=ppp,
+            offensive_rating=offensive_rating,
+            pace=pace,
+            projected_points=projected_points,
+            quarter=quarter,
+            game_status=game_status,
+            game_minute=minutes_played,
+            game_clock=game_clock,
+            elapsed_seconds=elapsed_seconds,
+            bookmaker_total=bookmaker_total,
+        )
+
 def get_games_by_date(game_date):
 
     url = (
@@ -304,11 +492,7 @@ def get_today_live_games():
     )
 
 
-def create_watch_from_game(
-    game,
-    baseline,
-    threshold
-):
+def create_watch_from_game(game):
 
     return Watch.objects.create(
 
@@ -325,15 +509,8 @@ def create_watch_from_game(
         league=
             game["league"]["name"],
 
-        parameter="total_points",
-
-        baseline=baseline,
-
-        threshold=threshold,
-
         active=True
     )
-
 
 def get_today_games():
 
@@ -357,3 +534,22 @@ def get_scheduled_games():
         for game in games
         if game["status"]["short"] == "NS"
     ]
+
+def get_team_statistics_for_watch(watch):
+
+    match_data = get_match_data(
+        watch.match_id
+    )
+
+    save_team_statistics(
+        watch=watch,
+        game_id=watch.match_id,
+        minutes_played=
+            match_data[
+                "minutes_played"
+            ]
+    )
+
+    return TeamStatistic.objects.filter(
+        watch=watch
+    ).order_by("-created_at")[:2]
