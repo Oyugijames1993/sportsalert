@@ -16,6 +16,7 @@ from .views import (
     AlertDetailView,
     parameter_trend,
     watch_data,
+    team_analysis,
 )
 
 urlpatterns = [
@@ -115,4 +116,10 @@ urlpatterns = [
         watch_data,
         name="watch-data",
     ),
+
+    path(
+        "team-analysis/<int:watch_id>/<int:team_id>/",
+        team_analysis,
+        name="team-analysis",
+),
 ]

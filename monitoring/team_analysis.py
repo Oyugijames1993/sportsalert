@@ -642,318 +642,7 @@ def project_team_points(
 
     return projection
 
-def analyse_team(
-    watch,
-    team_id
-):
 
-    summary = get_team_summary(
-        watch,
-        team_id
-    )
-
-    if summary is None:
-        return None
-
-    advanced_metrics = {
-
-        "estimated_possessions":
-            calculate_estimated_possessions(
-                summary
-            ),
-
-        "points_per_possession":
-            calculate_points_per_possession(
-                summary
-            ),
-
-        "offensive_rating":
-            calculate_offensive_rating(
-                summary
-            ),
-
-        "pace":
-            calculate_pace(
-                summary,
-                watch
-            ),
-    }
-
-    team_style = {
-
-        "three_point_rate":
-            calculate_three_point_rate(
-                summary
-            ),
-
-        "free_throw_rate":
-            calculate_free_throw_rate(
-                summary
-            ),
-
-        "assist_turnover_ratio":
-            calculate_assist_turnover_ratio(
-                summary
-            ),
-    }
-
-    shot_distribution = (
-        calculate_shot_distribution(
-            summary
-        )
-    )
-
-    projection = {
-
-        "projected_points":
-            project_team_points(
-                watch,
-                team_id
-            )
-    }
-
-    return {
-
-        "team":
-
-            {
-
-                "id": team_id,
-
-                "name":
-                    summary["team"],
-            },
-
-        "score":
-
-            {
-
-                "points":
-                    summary["points"],
-
-                "projected_points":
-                    projection[
-                        "projected_points"
-                    ],
-            },
-
-        "shooting":
-
-            {
-
-                "field_goals":
-
-                    {
-
-                        "points":
-                            summary[
-                                "field_goal_points"
-                            ],
-
-                        "made":
-                            summary[
-                                "field_goal_made"
-                            ],
-
-                        "attempted":
-                            summary[
-                                "field_goal_attempted"
-                            ],
-
-                        "percentage":
-                            summary[
-                                "field_goal_percentage"
-                            ],
-                    },
-
-                "three_pointers":
-
-                    {
-
-                        "made":
-                            summary[
-                                "three_pt_made"
-                            ],
-
-                        "attempted":
-                            summary[
-                                "three_pt_attempted"
-                            ],
-
-                        "percentage":
-                            summary[
-                                "three_pt_percentage"
-                            ],
-                    },
-
-                "free_throws":
-
-                    {
-
-                        "made":
-                            summary[
-                                "free_throw_made"
-                            ],
-
-                        "attempted":
-                            summary[
-                                "free_throw_attempted"
-                            ],
-
-                        "percentage":
-                            summary[
-                                "free_throw_percentage"
-                            ],
-                    },
-            },
-
-        "ball_control":
-
-            {
-
-                "assists":
-                    summary["assists"],
-
-                "turnovers":
-                    summary["turnovers"],
-
-                "assist_turnover_ratio":
-                    team_style[
-                        "assist_turnover_ratio"
-                    ],
-            },
-
-        "defense":
-
-            {
-
-                "rebounds":
-                    summary["rebounds"],
-
-                "steals":
-                    summary["steals"],
-
-                "blocks":
-                    summary["blocks"],
-            },
-
-        "advanced_metrics":
-
-            advanced_metrics,
-
-        "team_style":
-
-            {
-
-                "three_point_rate":
-                    team_style[
-                        "three_point_rate"
-                    ],
-
-                "free_throw_rate":
-                    team_style[
-                        "free_throw_rate"
-                    ],
-            },
-
-        "shot_distribution":
-
-            shot_distribution,
-    }
-def analyse_match(
-    watch
-):
-
-    team_ids = list(
-
-        watch.team_statistics
-
-        .values_list(
-            "team_id",
-            flat=True
-        )
-
-        .distinct()
-
-    )
-
-    if len(team_ids) != 2:
-        return None
-
-    home = analyse_team(
-        watch,
-        team_ids[0]
-    )
-
-    away = analyse_team(
-        watch,
-        team_ids[1]
-    )
-
-    home_projected = (
-        home["score"]["projected_points"]
-    )
-
-    away_projected = (
-        away["score"]["projected_points"]
-    )
-
-    projected_total = round(
-        home_projected +
-        away_projected,
-        2
-    )
-
-    projected_margin = round(
-        abs(
-            home_projected -
-            away_projected
-        ),
-        2
-    )
-
-    if home_projected > away_projected:
-
-        projected_winner = (
-            home["team"]["name"]
-        )
-
-    elif away_projected > home_projected:
-
-        projected_winner = (
-            away["team"]["name"]
-        )
-
-    else:
-
-        projected_winner = "Tie"
-
-    return {
-
-        "home": home,
-
-        "away": away,
-
-        "summary": {
-
-            "current_total":
-
-                home["score"]["points"]
-
-                +
-
-                away["score"]["points"],
-
-            "projected_total":
-                projected_total,
-
-            "projected_margin":
-                projected_margin,
-
-            "projected_winner":
-                projected_winner,
-        }
-    }
 
 def calculate_scoring_rate(
     watch,
@@ -1335,4 +1024,355 @@ def calculate_team_projection_v2(
 
         "projected_points":
             projected_points,
+    }
+
+def analyse_team(
+    watch,
+    team_id
+):
+
+    summary = get_team_summary(
+        watch,
+        team_id
+    )
+
+    if summary is None:
+        return None
+
+    advanced_metrics = {
+
+        "estimated_possessions":
+            calculate_estimated_possessions(
+                summary
+            ),
+
+        "points_per_possession":
+            calculate_points_per_possession(
+                summary
+            ),
+
+        "offensive_rating":
+            calculate_offensive_rating(
+                summary
+            ),
+
+        "pace":
+            calculate_pace(
+                summary,
+                watch
+            ),
+    }
+
+    team_style = {
+
+        "three_point_rate":
+            calculate_three_point_rate(
+                summary
+            ),
+
+        "free_throw_rate":
+            calculate_free_throw_rate(
+                summary
+            ),
+
+        "assist_turnover_ratio":
+            calculate_assist_turnover_ratio(
+                summary
+            ),
+    }
+
+    shot_distribution = (
+        calculate_shot_distribution(
+            summary
+        )
+    )
+
+    projection = {
+
+        "projected_points":
+            project_team_points(
+                watch,
+                team_id
+            )
+    }
+
+    analytics = {
+
+        "scoring_rate":
+            calculate_scoring_rate(
+                watch,
+                team_id
+            ),
+
+        "recent_shooting":
+            calculate_recent_shooting(
+                watch,
+                team_id
+            ),
+
+        "momentum":
+            calculate_team_momentum(
+                watch,
+                team_id
+            ),
+
+        "efficiency_trend":
+            calculate_efficiency_trend(
+                watch,
+                team_id
+            ),
+
+        "projection":
+            calculate_team_projection_v2(
+                watch,
+                team_id
+            ),
+    }
+
+    return {
+
+        "team":
+
+            {
+
+                "id": team_id,
+
+                "name":
+                    summary["team"],
+            },
+
+        "score":
+
+            {
+
+                "points":
+                    summary["points"],
+
+                "projected_points":
+                    projection[
+                        "projected_points"
+                    ],
+            },
+
+        "shooting":
+
+            {
+
+                "field_goals":
+
+                    {
+
+                        "points":
+                            summary[
+                                "field_goal_points"
+                            ],
+
+                        "made":
+                            summary[
+                                "field_goal_made"
+                            ],
+
+                        "attempted":
+                            summary[
+                                "field_goal_attempted"
+                            ],
+
+                        "percentage":
+                            summary[
+                                "field_goal_percentage"
+                            ],
+                    },
+
+                "three_pointers":
+
+                    {
+
+                        "made":
+                            summary[
+                                "three_pt_made"
+                            ],
+
+                        "attempted":
+                            summary[
+                                "three_pt_attempted"
+                            ],
+
+                        "percentage":
+                            summary[
+                                "three_pt_percentage"
+                            ],
+                    },
+
+                "free_throws":
+
+                    {
+
+                        "made":
+                            summary[
+                                "free_throw_made"
+                            ],
+
+                        "attempted":
+                            summary[
+                                "free_throw_attempted"
+                            ],
+
+                        "percentage":
+                            summary[
+                                "free_throw_percentage"
+                            ],
+                    },
+            },
+
+        "ball_control":
+
+            {
+
+                "assists":
+                    summary["assists"],
+
+                "turnovers":
+                    summary["turnovers"],
+
+                "assist_turnover_ratio":
+                    team_style[
+                        "assist_turnover_ratio"
+                    ],
+            },
+
+        "defense":
+
+            {
+
+                "rebounds":
+                    summary["rebounds"],
+
+                "steals":
+                    summary["steals"],
+
+                "blocks":
+                    summary["blocks"],
+            },
+
+        "advanced_metrics":
+
+            advanced_metrics,
+
+        "team_style":
+
+            {
+
+                "three_point_rate":
+                    team_style[
+                        "three_point_rate"
+                    ],
+
+                "free_throw_rate":
+                    team_style[
+                        "free_throw_rate"
+                    ],
+            },
+
+        "shot_distribution":
+
+            shot_distribution,
+
+        "analytics":
+
+            analytics,
+    }
+
+def analyse_match(
+    watch
+):
+
+    team_ids = list(
+
+        watch.team_statistics
+
+        .values_list(
+            "team_id",
+            flat=True
+        )
+
+        .distinct()
+
+    )
+
+    if len(team_ids) != 2:
+        return None
+
+    home = analyse_team(
+        watch,
+        team_ids[0]
+    )
+
+    away = analyse_team(
+        watch,
+        team_ids[1]
+    )
+
+    home_projected = (
+        home["score"]["projected_points"]
+    )
+
+    away_projected = (
+        away["score"]["projected_points"]
+    )
+
+    projected_total = round(
+        home_projected +
+        away_projected,
+        2
+    )
+
+    projected_margin = round(
+        abs(
+            home_projected -
+            away_projected
+        ),
+        2
+    )
+
+    if home_projected > away_projected:
+
+        projected_winner = (
+            home["team"]["name"]
+        )
+
+    elif away_projected > home_projected:
+
+        projected_winner = (
+            away["team"]["name"]
+        )
+
+    else:
+
+        projected_winner = "Tie"
+
+    return {
+
+        "home": home,
+
+        "away": away,
+
+        "summary": {
+
+            "current_total":
+
+                home["score"]["points"]
+
+                +
+
+                away["score"]["points"],
+
+            "projected_total":
+                projected_total,
+
+            "projected_margin":
+                projected_margin,
+
+            "projected_winner":
+                projected_winner,
+        }
     }

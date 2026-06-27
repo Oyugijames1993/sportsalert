@@ -1,0 +1,372 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2>{{ analysis.team.name }}</h2>
+
+            <p class="text-muted mb-0">
+
+                Team Analytics
+
+            </p>
+
+        </div>
+
+        <a href="{% url 'watch-detail' watch.id %}"
+           class="btn btn-secondary">
+
+            Back
+
+        </a>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- SCORE -->
+    <!-- ===================================================== -->
+
+    <div class="card mb-4">
+
+        <div class="card-header">
+
+            <strong>Score</strong>
+
+        </div>
+
+        <div class="card-body">
+
+            <table class="table table-bordered">
+
+                <tr>
+                    <th>Current Points</th>
+                    <td>{{ analysis.score.points }}</td>
+                </tr>
+
+                <tr>
+                    <th>Projected Points</th>
+                    <td>{{ analysis.score.projected_points }}</td>
+                </tr>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- FIELD GOALS -->
+    <!-- ===================================================== -->
+
+    <div class="card mb-4">
+
+        <div class="card-header">
+
+            <strong>Field Goals</strong>
+
+        </div>
+
+        <div class="card-body">
+
+            <table class="table table-striped">
+
+                <tr>
+                    <th>Made</th>
+                    <td>{{ analysis.shooting.field_goals.made }}</td>
+                </tr>
+
+                <tr>
+                    <th>Attempted</th>
+                    <td>{{ analysis.shooting.field_goals.attempted }}</td>
+                </tr>
+
+                <tr>
+                    <th>Percentage</th>
+                    <td>{{ analysis.shooting.field_goals.percentage }}%</td>
+                </tr>
+
+                <tr>
+                    <th>Points</th>
+                    <td>{{ analysis.shooting.field_goals.points }}</td>
+                </tr>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- THREE POINTERS -->
+    <!-- ===================================================== -->
+
+    <div class="card mb-4">
+
+        <div class="card-header">
+
+            <strong>Three Pointers</strong>
+
+        </div>
+
+        <div class="card-body">
+
+            <table class="table table-striped">
+
+                <tr>
+                    <th>Made</th>
+                    <td>{{ analysis.shooting.three_pointers.made }}</td>
+                </tr>
+
+                <tr>
+                    <th>Attempted</th>
+                    <td>{{ analysis.shooting.three_pointers.attempted }}</td>
+                </tr>
+
+                <tr>
+                    <th>Percentage</th>
+                    <td>{{ analysis.shooting.three_pointers.percentage }}%</td>
+                </tr>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- FREE THROWS -->
+    <!-- ===================================================== -->
+
+    <div class="card mb-4">
+
+        <div class="card-header">
+
+            <strong>Free Throws</strong>
+
+        </div>
+
+        <div class="card-body">
+
+            <table class="table table-striped">
+
+                <tr>
+                    <th>Made</th>
+                    <td>{{ analysis.shooting.free_throws.made }}</td>
+                </tr>
+
+                <tr>
+                    <th>Attempted</th>
+                    <td>{{ analysis.shooting.free_throws.attempted }}</td>
+                </tr>
+
+                <tr>
+                    <th>Percentage</th>
+                    <td>{{ analysis.shooting.free_throws.percentage }}%</td>
+                </tr>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- BALL CONTROL -->
+    <!-- ===================================================== -->
+
+    <div class="card mb-4">
+
+        <div class="card-header">
+
+            <strong>Ball Control</strong>
+
+        </div>
+
+        <div class="card-body">
+
+            <table class="table table-striped">
+
+                <tr>
+                    <th>Assists</th>
+                    <td>{{ analysis.ball_control.assists }}</td>
+                </tr>
+
+                <tr>
+                    <th>Turnovers</th>
+                    <td>{{ analysis.ball_control.turnovers }}</td>
+                </tr>
+
+                <tr>
+                    <th>Assist / Turnover Ratio</th>
+                    <td>{{ analysis.ball_control.assist_turnover_ratio }}</td>
+                </tr>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- DEFENSE -->
+    <!-- ===================================================== -->
+
+    <div class="card mb-4">
+
+        <div class="card-header">
+
+            <strong>Defense</strong>
+
+        </div>
+
+        <div class="card-body">
+
+            <table class="table table-striped">
+
+                <tr>
+                    <th>Rebounds</th>
+                    <td>{{ analysis.defense.rebounds }}</td>
+                </tr>
+
+                <tr>
+                    <th>Steals</th>
+                    <td>{{ analysis.defense.steals }}</td>
+                </tr>
+
+                <tr>
+                    <th>Blocks</th>
+                    <td>{{ analysis.defense.blocks }}</td>
+                </tr>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- ADVANCED METRICS -->
+    <!-- ===================================================== -->
+
+    <div class="card mb-4">
+
+        <div class="card-header">
+
+            <strong>Advanced Metrics</strong>
+
+        </div>
+
+        <div class="card-body">
+
+            <table class="table table-striped">
+
+                <tr>
+                    <th>Estimated Possessions</th>
+                    <td>{{ analysis.advanced_metrics.estimated_possessions }}</td>
+                </tr>
+
+                <tr>
+                    <th>Points Per Possession</th>
+                    <td>{{ analysis.advanced_metrics.points_per_possession }}</td>
+                </tr>
+
+                <tr>
+                    <th>Offensive Rating</th>
+                    <td>{{ analysis.advanced_metrics.offensive_rating }}</td>
+                </tr>
+
+                <tr>
+                    <th>Pace</th>
+                    <td>{{ analysis.advanced_metrics.pace }}</td>
+                </tr>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- SNAPSHOT HISTORY -->
+    <!-- ===================================================== -->
+
+    <div class="card mb-5">
+
+        <div class="card-header">
+
+            <strong>Snapshot History</strong>
+
+        </div>
+
+        <div class="card-body table-responsive">
+
+            <table class="table table-bordered table-hover">
+
+                <thead>
+
+                <tr>
+
+                    <th>Quarter</th>
+                    <th>Clock</th>
+                    <th>Points</th>
+                    <th>FGM</th>
+                    <th>FGA</th>
+                    <th>3PM</th>
+                    <th>3PA</th>
+                    <th>FTM</th>
+                    <th>FTA</th>
+                    <th>REB</th>
+                    <th>AST</th>
+                    <th>TO</th>
+
+                </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for s in snapshots %}
+
+                <tr>
+
+                    <td>{{ s.quarter }}</td>
+                    <td>{{ s.game_clock }}</td>
+                    <td>{{ s.points }}</td>
+                    <td>{{ s.field_goal_made }}</td>
+                    <td>{{ s.field_goal_attempted }}</td>
+                    <td>{{ s.three_pt_made }}</td>
+                    <td>{{ s.three_pt_attempted }}</td>
+                    <td>{{ s.free_throw_made }}</td>
+                    <td>{{ s.free_throw_attempted }}</td>
+                    <td>{{ s.rebounds }}</td>
+                    <td>{{ s.assists }}</td>
+                    <td>{{ s.turnovers }}</td>
+
+                </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

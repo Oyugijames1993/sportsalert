@@ -26,8 +26,12 @@ from .forms import (
     WatchForm,
     WatchParameterFormSet,
 )
+
+
 from .team_analysis import (
     analyse_match,
+    analyse_team,
+    get_team_snapshots,
 )
 
 
@@ -503,3 +507,45 @@ def watch_data(request, watch_id):
         ),
 
     })
+
+def team_analysis(
+    request,
+    watch_id,
+    team_id
+):
+
+    watch = get_object_or_404(
+        Watch,
+        pk=watch_id
+    )
+
+    analysis = analyse_team(
+        watch,
+        team_id
+    )
+
+    snapshots = (
+        get_team_snapshots(
+            watch,
+            team_id
+        )
+    )
+
+    context = {
+
+        "watch": watch,
+
+        "analysis": analysis,
+
+        "snapshots": snapshots,
+
+    }
+
+    return render(
+
+        request,
+
+        "monitoring/team_analysis.html",
+
+        context,
+    )

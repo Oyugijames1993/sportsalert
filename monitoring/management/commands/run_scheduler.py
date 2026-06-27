@@ -117,5 +117,5 @@ class Command(BaseCommand):
                     )
                 )
 
-            # Poll every 60 seconds
-            time.sleep(60)
+            # Poll every 30 seconds
+            time.sleep(30)
