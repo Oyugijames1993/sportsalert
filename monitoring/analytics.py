@@ -2,6 +2,7 @@ from .models import (
     Alert,
     MatchSnapshot
 )
+from .services import save_team_statistics
 
 
 def expected_score_at_time(
@@ -146,7 +147,9 @@ def check_watch(
         current_points,
         minutes_played,
         elapsed_seconds,
-        game_clock):
+        game_clock,
+        quarter,
+        game_status):
 
     parameter = (
         watch.parameters.first()
@@ -172,6 +175,7 @@ def check_watch(
         expected_score
     )
 
+    # Save analytics snapshot
     save_snapshot(
         watch,
         parameter,
@@ -180,6 +184,18 @@ def check_watch(
         deviation,
         elapsed_seconds,
         game_clock
+    )
+
+    # Save team statistics snapshot
+    save_team_statistics(
+        watch=watch,
+        game_id=watch.match_id,
+        minutes_played=minutes_played,
+        game_clock=game_clock,
+        elapsed_seconds=elapsed_seconds,
+        bookmaker_total=parameter.baseline,
+        quarter=quarter,
+        game_status=game_status,
     )
 
     print("\n====================")

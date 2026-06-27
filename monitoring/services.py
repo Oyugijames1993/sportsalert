@@ -327,112 +327,168 @@ def save_team_statistics(
     quarter=0,
     game_status=""
 ):
+    print(f"\nSaving team statistics for game {game_id}")
+
     data = get_team_statistics(game_id)
 
     if data is None:
+        print("No statistics returned from API.")
         return
 
     total_game_minutes = watch.total_game_minutes
 
     for index, team in enumerate(data["response"]):
 
-        fg_attempts = team["field_goals"].get("attempts") or 0
-        fg_made = team["field_goals"].get("total") or 0
-        fg_percentage = float(team["field_goals"].get("percentage") or 0)
+        try:
 
-        three_attempts = team["threepoint_goals"].get("attempts") or 0
-        three_made = team["threepoint_goals"].get("total") or 0
-        three_percentage = float(team["threepoint_goals"].get("percentage") or 0)
+            fg_attempts = team["field_goals"].get("attempts") or 0
+            fg_made = team["field_goals"].get("total") or 0
+            fg_percentage = float(team["field_goals"].get("percentage") or 0)
 
-        ft_attempts = team["freethrows_goals"].get("attempts") or 0
-        ft_made = team["freethrows_goals"].get("total") or 0
-        ft_percentage = float(team["freethrows_goals"].get("percentage") or 0)
+            three_attempts = (
+                team["threepoint_goals"].get("attempts") or 0
+            )
+            three_made = (
+                team["threepoint_goals"].get("total") or 0
+            )
+            three_percentage = float(
+                team["threepoint_goals"].get("percentage") or 0
+            )
 
-        field_goal_points = ((fg_made - three_made) * 2) + (three_made * 3)
-        points = field_goal_points + ft_made
+            ft_attempts = (
+                team["freethrows_goals"].get("attempts") or 0
+            )
+            ft_made = (
+                team["freethrows_goals"].get("total") or 0
+            )
+            ft_percentage = float(
+                team["freethrows_goals"].get("percentage") or 0
+            )
 
-        possessions = round(
-            fg_attempts + (0.44 * ft_attempts) + (team.get("turnovers") or 0),
-            2
-        )
+            field_goal_points = (
+                ((fg_made - three_made) * 2)
+                + (three_made * 3)
+            )
 
-        if possessions > 0:
-            ppp = round(points / possessions, 3)
-            offensive_rating = round(ppp * 100, 2)
-        else:
-            ppp = 0
-            offensive_rating = 0
+            points = field_goal_points + ft_made
 
-        if minutes_played > 0:
-            pace = round((possessions / minutes_played) * total_game_minutes, 2)
-            projected_points = round((points / minutes_played) * total_game_minutes, 2)
-        else:
-            pace = 0
-            projected_points = 0
+            rebounds = (
+                team["rebounds"].get("total") or 0
+            )
 
-        team_name = watch.home_team if index == 0 else watch.away_team
+            assists = team.get("assists") or 0
+            steals = team.get("steals") or 0
+            blocks = team.get("blocks") or 0
+            turnovers = team.get("turnovers") or 0
 
-        rebounds = team["rebounds"].get("total") or 0
-        assists = team.get("assists") or 0
-        steals = team.get("steals") or 0
-        blocks = team.get("blocks") or 0
-        turnovers = team.get("turnovers") or 0
+            possessions = round(
+                fg_attempts +
+                (0.44 * ft_attempts) +
+                turnovers,
+                2
+            )
 
-        latest = (
-            TeamStatistic.objects
-            .filter(watch=watch, team_id=team["team"]["id"])
-            .order_by("-created_at")
-            .first()
-        )
+            if possessions > 0:
+                ppp = round(points / possessions, 3)
+                offensive_rating = round(ppp * 100, 2)
+            else:
+                ppp = 0
+                offensive_rating = 0
 
-        if latest and (
-            latest.points == points and
-            latest.field_goal_made == fg_made and
-            latest.field_goal_attempted == fg_attempts and
-            latest.three_pt_made == three_made and
-            latest.three_pt_attempted == three_attempts and
-            latest.free_throw_made == ft_made and
-            latest.free_throw_attempted == ft_attempts and
-            latest.rebounds == rebounds and
-            latest.assists == assists and
-            latest.steals == steals and
-            latest.blocks == blocks and
-            latest.turnovers == turnovers
-        ):
-            continue
+            if minutes_played > 0:
+                pace = round(
+                    (possessions / minutes_played)
+                    * total_game_minutes,
+                    2
+                )
 
-        TeamStatistic.objects.create(
-            watch=watch,
-            team_id=team["team"]["id"],
-            team_name=team_name,
-            points=points,
-            field_goal_points=field_goal_points,
-            field_goal_made=fg_made,
-            field_goal_attempted=fg_attempts,
-            field_goal_percentage=fg_percentage,
-            three_pt_made=three_made,
-            three_pt_attempted=three_attempts,
-            three_pt_percentage=three_percentage,
-            free_throw_made=ft_made,
-            free_throw_attempted=ft_attempts,
-            free_throw_percentage=ft_percentage,
-            rebounds=rebounds,
-            assists=assists,
-            steals=steals,
-            blocks=blocks,
-            turnovers=turnovers,
-            estimated_possessions=possessions,
-            points_per_possession=ppp,
-            offensive_rating=offensive_rating,
-            pace=pace,
-            projected_points=projected_points,
-            quarter=quarter,
-            game_status=game_status,
-            game_minute=minutes_played,
-            game_clock=game_clock,
-            elapsed_seconds=elapsed_seconds,
-            bookmaker_total=bookmaker_total,
-        )
+                projected_points = round(
+                    (points / minutes_played)
+                    * total_game_minutes,
+                    2
+                )
+            else:
+                pace = 0
+                projected_points = 0
+
+            team_name = (
+                watch.home_team
+                if index == 0
+                else watch.away_team
+            )
+
+            latest = (
+                TeamStatistic.objects
+                .filter(
+                    watch=watch,
+                    team_id=team["team"]["id"]
+                )
+                .order_by("-created_at")
+                .first()
+            )
+
+            if latest and (
+                latest.points == points and
+                latest.field_goal_made == fg_made and
+                latest.field_goal_attempted == fg_attempts and
+                latest.three_pt_made == three_made and
+                latest.three_pt_attempted == three_attempts and
+                latest.free_throw_made == ft_made and
+                latest.free_throw_attempted == ft_attempts and
+                latest.rebounds == rebounds and
+                latest.assists == assists and
+                latest.steals == steals and
+                latest.blocks == blocks and
+                latest.turnovers == turnovers
+            ):
+                print(f"Skipping {team_name} (no changes).")
+                continue
+
+            stat = TeamStatistic.objects.create(
+                watch=watch,
+                team_id=team["team"]["id"],
+                team_name=team_name,
+                points=points,
+                field_goal_points=field_goal_points,
+                field_goal_made=fg_made,
+                field_goal_attempted=fg_attempts,
+                field_goal_percentage=fg_percentage,
+                three_pt_made=three_made,
+                three_pt_attempted=three_attempts,
+                three_pt_percentage=three_percentage,
+                free_throw_made=ft_made,
+                free_throw_attempted=ft_attempts,
+                free_throw_percentage=ft_percentage,
+                rebounds=rebounds,
+                assists=assists,
+                steals=steals,
+                blocks=blocks,
+                turnovers=turnovers,
+                estimated_possessions=possessions,
+                points_per_possession=ppp,
+                offensive_rating=offensive_rating,
+                pace=pace,
+                projected_points=projected_points,
+                quarter=quarter,
+                game_status=game_status,
+                game_minute=minutes_played,
+                game_clock=game_clock,
+                elapsed_seconds=elapsed_seconds,
+                bookmaker_total=bookmaker_total,
+            )
+
+            print(
+                f"Saved snapshot for "
+                f"{team_name} "
+                f"(ID={stat.id})"
+            )
+
+        except Exception as e:
+            print(
+                f"Error saving "
+                f"{team.get('team', {}).get('name', 'Unknown')}: "
+                f"{e}"
+            )
 
 def get_games_by_date(game_date):
 

@@ -101,13 +101,17 @@ class Command(BaseCommand):
                     f"{data['total_game_minutes']}"
                 )
 
+
                 triggered = check_watch(
-                    watch,
-                    data["current_points"],
-                    data["minutes_played"],
-                    data["elapsed_seconds"],
-                    data["game_clock"]
+                    watch=watch,
+                    current_points=data["current_points"],
+                    minutes_played=data["minutes_played"],
+                    elapsed_seconds=data["elapsed_seconds"],
+                    game_clock=data["game_clock"],
+                    quarter=data["quarter"],
+                    game_status=data["status"],
                 )
+
 
                 if triggered:
 

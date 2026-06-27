@@ -1,0 +1,77 @@
+{% extends "monitoring/base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">
+        Today's Live Games
+    </h2>
+
+    <table class="table table-hover">
+
+        <thead>
+
+        <tr>
+            <th>Match</th>
+            <th>Status</th>
+            <th>Score</th>
+            <th></th>
+        </tr>
+
+        </thead>
+
+        <tbody>
+
+        {% for game in games %}
+
+        <tr>
+
+            <td>
+
+                {{ game.teams.home.name }}
+
+                vs
+
+                {{ game.teams.away.name }}
+
+            </td>
+
+            <td>
+
+                {{ game.status.short }}
+
+            </td>
+
+            <td>
+
+                {{ game.scores.home.total }}
+
+                -
+
+                {{ game.scores.away.total }}
+
+            </td>
+
+            <td>
+
+                <a href="{% url 'watch-create' %}?match_id={{ game.id }}"
+                   class="btn btn-primary btn-sm">
+
+                    Create Watch
+
+                </a>
+
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}

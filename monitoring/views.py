@@ -33,6 +33,7 @@ from .team_analysis import (
     analyse_team,
     get_team_snapshots,
 )
+from monitoring.services import get_today_live_games
 
 
 # ==========================================================
@@ -548,4 +549,19 @@ def team_analysis(
         "monitoring/team_analysis.html",
 
         context,
+    )
+
+
+
+
+def live_games(request):
+
+    games = get_today_live_games()
+
+    return render(
+        request,
+        "monitoring/live_games.html",
+        {
+            "games": games,
+        },
     )

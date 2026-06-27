@@ -17,6 +17,7 @@ from .views import (
     parameter_trend,
     watch_data,
     team_analysis,
+    live_games,
 )
 
 urlpatterns = [
@@ -121,5 +122,11 @@ urlpatterns = [
         "team-analysis/<int:watch_id>/<int:team_id>/",
         team_analysis,
         name="team-analysis",
-),
+    ),
+    path(
+        "live-games/",
+        live_games,
+        name="live-games"
+    ),
+
 ]
