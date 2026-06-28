@@ -22,23 +22,9 @@ def expected_score_at_time(
 
 def save_snapshot(
         watch,
-        parameter,
         current_points,
-        expected_score,
-        deviation,
         elapsed_seconds,
         game_clock):
-
-    total_game_seconds = (
-        watch.total_game_minutes * 60
-    )
-
-    expected_rate = (
-        parameter.baseline /
-        total_game_seconds
-        if total_game_seconds > 0
-        else 0
-    )
 
     actual_rate = (
         current_points /
@@ -57,32 +43,12 @@ def save_snapshot(
 
         current_points=current_points,
 
-        expected_points=expected_score,
-
-        live_deviation=deviation,
-
-        # Legacy fields retained for compatibility
-        projection=current_points,
-
-        deviation=deviation,
-
         minutes_played=(
             elapsed_seconds / 60
         ),
 
-        expected_scoring_rate=expected_rate,
-
         actual_scoring_rate=actual_rate,
-
-        scoring_rate_deviation=(
-            actual_rate -
-            expected_rate
-        ),
-
-        recent_scoring_rate=actual_rate
     )
-
-
 def create_alert(
         watch,
         parameter,
@@ -151,84 +117,34 @@ def check_watch(
         quarter,
         game_status):
 
-    parameter = (
-        watch.parameters.first()
-    )
-
-    if not parameter:
-        return False
-
-    total_game_seconds = (
-        watch.total_game_minutes * 60
-    )
-
-    expected_score = (
-        expected_score_at_time(
-            parameter.baseline,
-            elapsed_seconds,
-            total_game_seconds
-        )
-    )
-
-    deviation = (
-        current_points -
-        expected_score
-    )
-
-    # Save analytics snapshot
+    # Save match snapshot
     save_snapshot(
-        watch,
-        parameter,
-        current_points,
-        expected_score,
-        deviation,
-        elapsed_seconds,
-        game_clock
+        watch=watch,
+        current_points=current_points,
+        elapsed_seconds=elapsed_seconds,
+        game_clock=game_clock,
     )
 
-    # Save team statistics snapshot
+    # Save team statistics
     save_team_statistics(
         watch=watch,
         game_id=watch.match_id,
         minutes_played=minutes_played,
         game_clock=game_clock,
         elapsed_seconds=elapsed_seconds,
-        bookmaker_total=parameter.baseline,
+        bookmaker_total=None,
         quarter=quarter,
         game_status=game_status,
     )
 
     print("\n====================")
-    print(
-        f"Expected Score: "
-        f"{expected_score:.2f}"
-    )
-    print(
-        f"Actual Score: "
-        f"{current_points:.2f}"
-    )
-    print(
-        f"Deviation: "
-        f"{deviation:.2f}"
-    )
+    print(f"Current Points: {current_points}")
+    print(f"Minutes Played: {minutes_played}")
+    print(f"Game Clock: {game_clock}")
+    print(f"Elapsed Seconds: {elapsed_seconds}")
+    print(f"Quarter: {quarter}")
+    print(f"Status: {game_status}")
     print("====================\n")
 
-    if abs(deviation) >= (
-        parameter.threshold
-    ):
-
-        if should_create_alert(
-                watch,
-                deviation):
-
-            create_alert(
-                watch,
-                parameter,
-                expected_score,
-                current_points,
-                deviation
-            )
-
-            return True
-
+    # Alerts will be generated later from the analytics engine.
     return False

@@ -134,37 +134,16 @@ class MatchSnapshot(models.Model):
         default=0
     )
 
-    current_points = models.FloatField()
-
-    expected_points = models.FloatField()
-
-    live_deviation = models.FloatField()
-
-    projection = models.FloatField()
-
-    deviation = models.FloatField()
-
-    minutes_played = models.FloatField()
-
-    expected_scoring_rate = models.FloatField()
-
-    actual_scoring_rate = models.FloatField()
-
-    scoring_rate_deviation = models.FloatField()
-
-    recent_scoring_rate = models.FloatField(
-        null=True,
-        blank=True
+    minutes_played = models.FloatField(
+        default=0
     )
 
-    bookmaker_total = models.FloatField(
-        null=True,
-        blank=True
+    current_points = models.IntegerField(
+        default=0
     )
 
-    bookmaker_spread = models.FloatField(
-        null=True,
-        blank=True
+    actual_scoring_rate = models.FloatField(
+        default=0
     )
 
     created_at = models.DateTimeField(
@@ -325,6 +304,31 @@ class TeamStatistic(models.Model):
             (
                 self.field_goal_made /
                 self.field_goal_attempted
+            ) * 100,
+            2
+        )
+
+    @property
+    def two_pt_made(self):
+        return self.field_goal_made - self.three_pt_made
+
+    @property
+    def two_pt_attempted(self):
+        return (
+                self.field_goal_attempted -
+                self.three_pt_attempted
+        )
+
+    @property
+    def two_pt_percentage(self):
+
+        if self.two_pt_attempted == 0:
+            return 0
+
+        return round(
+            (
+                    self.two_pt_made /
+                    self.two_pt_attempted
             ) * 100,
             2
         )
