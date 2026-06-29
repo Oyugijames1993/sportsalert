@@ -1,6 +1,9 @@
 import time
 
-from django.core.management import BaseCommand, call_command
+from django.core.management import (
+    BaseCommand,
+    call_command,
+)
 from django.utils import timezone
 
 from monitoring.models import Watch
@@ -18,7 +21,10 @@ LIVE_STATUSES = {
 
 
 class Command(BaseCommand):
-    help = "Runs monitor_matches for live games only"
+
+    help = (
+        "Runs monitor_matches for live games only"
+    )
 
     def handle(self, *args, **options):
 
@@ -50,9 +56,18 @@ class Command(BaseCommand):
                             watch.match_id
                         )
 
+                        # Status is already a string (Q1, Q2, HT, Q3, Q4, OT, FT)
                         status = data.get(
                             "status",
                             ""
+                        )
+
+                        print(
+                            f"\nGame {watch.match_id}"
+                        )
+
+                        print(
+                            f"Status: {status}"
                         )
 
                         if status in LIVE_STATUSES:
@@ -78,7 +93,8 @@ class Command(BaseCommand):
                         else:
 
                             self.stdout.write(
-                                f"Game {watch.match_id} not started "
+                                f"Game {watch.match_id} "
+                                f"not live "
                                 f"(status={status})"
                             )
 
@@ -106,7 +122,9 @@ class Command(BaseCommand):
                 else:
 
                     self.stdout.write(
-                        "No live games found"
+                        self.style.WARNING(
+                            "No live games found"
+                        )
                     )
 
             except Exception as e:

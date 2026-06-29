@@ -36,6 +36,7 @@ class Command(BaseCommand):
                     watch.match_id
                 )
 
+                # Status is already a string (Q1, Q2, HT, Q3, Q4, OT, FT)
                 status = data.get(
                     "status",
                     ""
@@ -57,7 +58,6 @@ class Command(BaseCommand):
                 if status == "FT":
 
                     watch.monitoring_finished = True
-
                     watch.active = False
 
                     watch.save()
@@ -101,7 +101,6 @@ class Command(BaseCommand):
                     f"{data['total_game_minutes']}"
                 )
 
-
                 triggered = check_watch(
                     watch=watch,
                     current_points=data["current_points"],
@@ -109,9 +108,8 @@ class Command(BaseCommand):
                     elapsed_seconds=data["elapsed_seconds"],
                     game_clock=data["game_clock"],
                     quarter=data["quarter"],
-                    game_status=data["status"],
+                    game_status=status,
                 )
-
 
                 if triggered:
 

@@ -306,7 +306,7 @@ def get_team_statistics(game_id):
 
     data = response.json()
 
-    if data["results"] == 0:
+    if data.get("results", 0) == 0:
 
         print(
             f"No team statistics available "
@@ -315,8 +315,13 @@ def get_team_statistics(game_id):
 
         return None
 
-    return data
+    print(
+        f"Retrieved statistics for "
+        f"game {game_id} "
+        f"({data['results']} team records)"
+    )
 
+    return data
 def save_team_statistics(
     watch,
     game_id,
