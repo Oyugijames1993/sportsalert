@@ -339,18 +339,39 @@ def save_team_statistics(
 
     for index, team in enumerate(data["response"]):
 
+        # =====================================
+        # DEBUG
+        # =====================================
+
+        print("\n==========================================")
+        print("TEAM:", team["team"]["name"])
+        print("FIELD GOALS:", team["field_goals"])
+        print("THREE POINTERS:", team["threepoint_goals"])
+        print("FREE THROWS:", team["freethrows_goals"])
+        print("==========================================")
+
         try:
 
-            fg_attempts = team["field_goals"].get("attempts") or 0
-            fg_made = team["field_goals"].get("total") or 0
-            fg_percentage = float(team["field_goals"].get("percentage") or 0)
+            fg_attempts = (
+                team["field_goals"].get("attempts") or 0
+            )
+
+            fg_made = (
+                team["field_goals"].get("total") or 0
+            )
+
+            fg_percentage = float(
+                team["field_goals"].get("percentage") or 0
+            )
 
             three_attempts = (
                 team["threepoint_goals"].get("attempts") or 0
             )
+
             three_made = (
                 team["threepoint_goals"].get("total") or 0
             )
+
             three_percentage = float(
                 team["threepoint_goals"].get("percentage") or 0
             )
@@ -358,19 +379,48 @@ def save_team_statistics(
             ft_attempts = (
                 team["freethrows_goals"].get("attempts") or 0
             )
+
             ft_made = (
                 team["freethrows_goals"].get("total") or 0
             )
+
             ft_percentage = float(
                 team["freethrows_goals"].get("percentage") or 0
             )
 
+            # =====================================
+            # DEBUG
+            # =====================================
+
+            print("\nParsed values")
+            print(f"FGM: {fg_made}")
+            print(f"FGA: {fg_attempts}")
+            print(f"3PM: {three_made}")
+            print(f"3PA: {three_attempts}")
+            print(f"FTM: {ft_made}")
+            print(f"FTA: {ft_attempts}")
+
+            if fg_attempts < three_attempts:
+                print("ERROR: FGA is less than 3PA")
+
+            if fg_made < three_made:
+                print("ERROR: FGM is less than 3PM")
+
+            two_pt_made = fg_made - three_made
+            two_pt_attempts = fg_attempts - three_attempts
+
+            print(f"Derived 2PM: {two_pt_made}")
+            print(f"Derived 2PA: {two_pt_attempts}")
+
             field_goal_points = (
-                ((fg_made - three_made) * 2)
+                (two_pt_made * 2)
                 + (three_made * 3)
             )
 
-            points = field_goal_points + ft_made
+            points = (
+                field_goal_points +
+                ft_made
+            )
 
             rebounds = (
                 team["rebounds"].get("total") or 0
@@ -396,6 +446,7 @@ def save_team_statistics(
                 offensive_rating = 0
 
             if minutes_played > 0:
+
                 pace = round(
                     (possessions / minutes_played)
                     * total_game_minutes,
@@ -407,7 +458,9 @@ def save_team_statistics(
                     * total_game_minutes,
                     2
                 )
+
             else:
+
                 pace = 0
                 projected_points = 0
 
@@ -478,18 +531,15 @@ def save_team_statistics(
             )
 
             print(
-                f"Saved snapshot for "
-                f"{team_name} "
-                f"(ID={stat.id})"
+                f"Saved snapshot for {team_name} (ID={stat.id})"
             )
 
         except Exception as e:
+
             print(
                 f"Error saving "
-                f"{team.get('team', {}).get('name', 'Unknown')}: "
-                f"{e}"
+                f"{team.get('team', {}).get('name', 'Unknown')}: {e}"
             )
-
 def get_games_by_date(game_date):
 
     url = (
