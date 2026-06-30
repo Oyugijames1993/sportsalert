@@ -119,7 +119,7 @@ urlpatterns = [
     ),
 
     path(
-        "team-analysis/<int:watch_id>/<int:team_id>/",
+        "team-analysis/<int:watch_id>/",
         team_analysis,
         name="team-analysis",
     ),

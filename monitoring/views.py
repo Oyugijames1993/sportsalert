@@ -35,6 +35,12 @@ from .team_analysis import (
 )
 from monitoring.services import get_today_live_games
 
+from django.shortcuts import (
+    get_object_or_404,
+    render,
+)
+
+
 
 # ==========================================================
 # DASHBOARD
@@ -509,10 +515,12 @@ def watch_data(request, watch_id):
 
     })
 
+
+
+
 def team_analysis(
     request,
     watch_id,
-    team_id
 ):
 
     watch = get_object_or_404(
@@ -520,25 +528,156 @@ def team_analysis(
         pk=watch_id
     )
 
-    analysis = analyse_team(
-        watch,
-        team_id
+    teams = list(
+
+        TeamStatistic.objects
+
+        .filter(
+            watch=watch
+        )
+
+        .values(
+            "team_id",
+            "team_name"
+        )
+
+        .distinct()
+
     )
 
-    snapshots = (
-        get_team_snapshots(
-            watch,
-            team_id
+    if len(teams) < 2:
+
+        return render(
+
+            request,
+
+            "monitoring/team_analysis.html",
+
+            {
+                "watch": watch,
+                "error": (
+                    "No team statistics "
+                    "available yet."
+                ),
+            },
+
         )
+
+    home_team = teams[0]
+    away_team = teams[1]
+
+    home_analysis = analyse_team(
+        watch,
+        home_team["team_id"]
     )
+
+    away_analysis = analyse_team(
+        watch,
+        away_team["team_id"]
+    )
+
+    home_snapshots = get_team_snapshots(
+        watch,
+        home_team["team_id"]
+    )
+
+    away_snapshots = get_team_snapshots(
+        watch,
+        away_team["team_id"]
+    )
+
+    # ======================================
+    # HOME TEAM GRAPH DATA
+    # ======================================
+
+    home_labels = []
+
+    home_three_pa = []
+    home_three_pm = []
+
+    home_two_pa = []
+    home_two_pm = []
+
+    for stat in home_snapshots:
+
+        home_labels.append(
+            stat.elapsed_seconds
+        )
+
+        home_three_pa.append(
+            stat.three_pt_attempted
+        )
+
+        home_three_pm.append(
+            stat.three_pt_made
+        )
+
+        home_two_pa.append(
+            stat.two_pt_attempted
+        )
+
+        home_two_pm.append(
+            stat.two_pt_made
+        )
+
+    # ======================================
+    # AWAY TEAM GRAPH DATA
+    # ======================================
+
+    away_labels = []
+
+    away_three_pa = []
+    away_three_pm = []
+
+    away_two_pa = []
+    away_two_pm = []
+
+    for stat in away_snapshots:
+
+        away_labels.append(
+            stat.elapsed_seconds
+        )
+
+        away_three_pa.append(
+            stat.three_pt_attempted
+        )
+
+        away_three_pm.append(
+            stat.three_pt_made
+        )
+
+        away_two_pa.append(
+            stat.two_pt_attempted
+        )
+
+        away_two_pm.append(
+            stat.two_pt_made
+        )
 
     context = {
 
         "watch": watch,
 
-        "analysis": analysis,
+        "home_team": home_team,
+        "away_team": away_team,
 
-        "snapshots": snapshots,
+        "home_analysis": home_analysis,
+        "away_analysis": away_analysis,
+
+        "home_snapshots": home_snapshots,
+        "away_snapshots": away_snapshots,
+
+        "home_labels": home_labels,
+        "home_three_pa": home_three_pa,
+        "home_three_pm": home_three_pm,
+        "home_two_pa": home_two_pa,
+        "home_two_pm": home_two_pm,
+
+        "away_labels": away_labels,
+        "away_three_pa": away_three_pa,
+        "away_three_pm": away_three_pm,
+        "away_two_pa": away_two_pa,
+        "away_two_pm": away_two_pm,
 
     }
 
@@ -549,9 +688,8 @@ def team_analysis(
         "monitoring/team_analysis.html",
 
         context,
+
     )
-
-
 
 
 def live_games(request):

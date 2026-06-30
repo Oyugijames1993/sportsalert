@@ -348,8 +348,23 @@ def save_team_statistics(
         # DEBUG
         # =====================================
 
+        # =====================================
+        # TEAM NAME
+        # =====================================
+
+        team_name = (
+            watch.home_team
+            if index == 0
+            else watch.away_team
+        )
+
+        # =====================================
+        # DEBUG
+        # =====================================
+
         print("\n==========================================")
-        print("TEAM:", team["team"]["name"])
+        print("TEAM:", team_name)
+        print("TEAM ID:", team["team"]["id"])
         print("FIELD GOALS:", team["field_goals"])
         print("THREE POINTERS:", team["threepoint_goals"])
         print("FREE THROWS:", team["freethrows_goals"])
@@ -540,11 +555,11 @@ def save_team_statistics(
             )
 
         except Exception as e:
-
             print(
-                f"Error saving "
-                f"{team.get('team', {}).get('name', 'Unknown')}: {e}"
+                f"Error saving {team_name}: {e}"
             )
+
+
 def get_games_by_date(game_date):
 
     url = (

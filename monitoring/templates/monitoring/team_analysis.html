@@ -2,21 +2,17 @@
 
 {% block content %}
 
-<div class="container mt-4">
+<div class="container-fluid mt-4">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
 
-        <div>
+        <h2>
 
-            <h2>{{ analysis.team.name }}</h2>
+            {{ watch.home_team }}
+            vs
+            {{ watch.away_team }}
 
-            <p class="text-muted mb-0">
-
-                Team Analytics
-
-            </p>
-
-        </div>
+        </h2>
 
         <a href="{% url 'watch-detail' watch.id %}"
            class="btn btn-secondary">
@@ -28,275 +24,431 @@
     </div>
 
 
-    <!-- ===================================================== -->
-    <!-- SCORE -->
-    <!-- ===================================================== -->
+    <div class="row">
 
-    <div class="card mb-4">
+        <!-- ================= HOME ================= -->
 
-        <div class="card-header">
+        <div class="col-lg-6">
 
-            <strong>Score</strong>
+            <div class="card shadow-sm mb-4">
+
+                <div class="card-header bg-primary text-white">
+
+                    <strong>{{ home_team.team_name }}</strong>
+
+                </div>
+
+                <div class="card-body">
+
+                    <table class="table table-bordered">
+
+                        <tr>
+                            <th>Points</th>
+                            <td>{{ home_analysis.score.points }}</td>
+                        </tr>
+
+                        <tr>
+                            <th>Projected</th>
+                            <td>{{ home_analysis.score.projected_points }}</td>
+                        </tr>
+
+                        <tr>
+                            <th>FG</th>
+                            <td>
+
+                                {{ home_analysis.shooting.field_goals.made }}
+
+                                /
+
+                                {{ home_analysis.shooting.field_goals.attempted }}
+
+                                ({{ home_analysis.shooting.field_goals.percentage }}%)
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+                            <th>3PT</th>
+                            <td>
+
+                                {{ home_analysis.shooting.three_pointers.made }}
+
+                                /
+
+                                {{ home_analysis.shooting.three_pointers.attempted }}
+
+                                ({{ home_analysis.shooting.three_pointers.percentage }}%)
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+                            <th>FT</th>
+                            <td>
+
+                                {{ home_analysis.shooting.free_throws.made }}
+
+                                /
+
+                                {{ home_analysis.shooting.free_throws.attempted }}
+
+                                ({{ home_analysis.shooting.free_throws.percentage }}%)
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>Rebounds</th>
+
+                            <td>
+
+                                {{ home_analysis.defense.rebounds }}
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>Assists</th>
+
+                            <td>
+
+                                {{ home_analysis.ball_control.assists }}
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>Turnovers</th>
+
+                            <td>
+
+                                {{ home_analysis.ball_control.turnovers }}
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>PPP</th>
+
+                            <td>
+
+                                {{ home_analysis.advanced_metrics.points_per_possession }}
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>Off Rating</th>
+
+                            <td>
+
+                                {{ home_analysis.advanced_metrics.offensive_rating }}
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>Pace</th>
+
+                            <td>
+
+                                {{ home_analysis.advanced_metrics.pace }}
+
+                            </td>
+
+                        </tr>
+
+                    </table>
+
+                </div>
+
+            </div>
 
         </div>
 
-        <div class="card-body">
 
-            <table class="table table-bordered">
+        <!-- ================= AWAY ================= -->
 
-                <tr>
-                    <th>Current Points</th>
-                    <td>{{ analysis.score.points }}</td>
-                </tr>
+        <div class="col-lg-6">
 
-                <tr>
-                    <th>Projected Points</th>
-                    <td>{{ analysis.score.projected_points }}</td>
-                </tr>
+            <div class="card shadow-sm mb-4">
 
-            </table>
+                <div class="card-header bg-success text-white">
+
+                    <strong>{{ away_team.team_name }}</strong>
+
+                </div>
+
+                <div class="card-body">
+
+                    <table class="table table-bordered">
+
+                        <tr>
+                            <th>Points</th>
+                            <td>{{ away_analysis.score.points }}</td>
+                        </tr>
+
+                        <tr>
+                            <th>Projected</th>
+                            <td>{{ away_analysis.score.projected_points }}</td>
+                        </tr>
+
+                        <tr>
+                            <th>FG</th>
+                            <td>
+
+                                {{ away_analysis.shooting.field_goals.made }}
+
+                                /
+
+                                {{ away_analysis.shooting.field_goals.attempted }}
+
+                                ({{ away_analysis.shooting.field_goals.percentage }}%)
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+                            <th>3PT</th>
+                            <td>
+
+                                {{ away_analysis.shooting.three_pointers.made }}
+
+                                /
+
+                                {{ away_analysis.shooting.three_pointers.attempted }}
+
+                                ({{ away_analysis.shooting.three_pointers.percentage }}%)
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+                            <th>FT</th>
+                            <td>
+
+                                {{ away_analysis.shooting.free_throws.made }}
+
+                                /
+
+                                {{ away_analysis.shooting.free_throws.attempted }}
+
+                                ({{ away_analysis.shooting.free_throws.percentage }}%)
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>Rebounds</th>
+
+                            <td>
+
+                                {{ away_analysis.defense.rebounds }}
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>Assists</th>
+
+                            <td>
+
+                                {{ away_analysis.ball_control.assists }}
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>Turnovers</th>
+
+                            <td>
+
+                                {{ away_analysis.ball_control.turnovers }}
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>PPP</th>
+
+                            <td>
+
+                                {{ away_analysis.advanced_metrics.points_per_possession }}
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>Off Rating</th>
+
+                            <td>
+
+                                {{ away_analysis.advanced_metrics.offensive_rating }}
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>Pace</th>
+
+                            <td>
+
+                                {{ away_analysis.advanced_metrics.pace }}
+
+                            </td>
+
+                        </tr>
+
+                    </table>
+
+                </div>
+
+            </div>
 
         </div>
 
     </div>
 
-
     <!-- ===================================================== -->
-    <!-- FIELD GOALS -->
-    <!-- ===================================================== -->
+<!-- THREE POINT GRAPHS -->
+<!-- ===================================================== -->
 
-    <div class="card mb-4">
+<div class="row mb-4">
 
-        <div class="card-header">
+    <div class="col-lg-6">
 
-            <strong>Field Goals</strong>
+        <div class="card shadow-sm">
 
-        </div>
+            <div class="card-header bg-primary text-white">
 
-        <div class="card-body">
+                <strong>{{ home_team.team_name }}</strong>
 
-            <table class="table table-striped">
+                <br>
 
-                <tr>
-                    <th>Made</th>
-                    <td>{{ analysis.shooting.field_goals.made }}</td>
-                </tr>
+                Three Point Trend
 
-                <tr>
-                    <th>Attempted</th>
-                    <td>{{ analysis.shooting.field_goals.attempted }}</td>
-                </tr>
+            </div>
 
-                <tr>
-                    <th>Percentage</th>
-                    <td>{{ analysis.shooting.field_goals.percentage }}%</td>
-                </tr>
+            <div class="card-body">
 
-                <tr>
-                    <th>Points</th>
-                    <td>{{ analysis.shooting.field_goals.points }}</td>
-                </tr>
+                <canvas id="homeThreeChart"></canvas>
 
-            </table>
+            </div>
 
         </div>
 
     </div>
 
+    <div class="col-lg-6">
 
-    <!-- ===================================================== -->
-    <!-- THREE POINTERS -->
-    <!-- ===================================================== -->
+        <div class="card shadow-sm">
 
-    <div class="card mb-4">
+            <div class="card-header bg-success text-white">
 
-        <div class="card-header">
+                <strong>{{ away_team.team_name }}</strong>
 
-            <strong>Three Pointers</strong>
+                <br>
 
-        </div>
+                Three Point Trend
 
-        <div class="card-body">
+            </div>
 
-            <table class="table table-striped">
+            <div class="card-body">
 
-                <tr>
-                    <th>Made</th>
-                    <td>{{ analysis.shooting.three_pointers.made }}</td>
-                </tr>
+                <canvas id="awayThreeChart"></canvas>
 
-                <tr>
-                    <th>Attempted</th>
-                    <td>{{ analysis.shooting.three_pointers.attempted }}</td>
-                </tr>
-
-                <tr>
-                    <th>Percentage</th>
-                    <td>{{ analysis.shooting.three_pointers.percentage }}%</td>
-                </tr>
-
-            </table>
+            </div>
 
         </div>
 
     </div>
 
+</div>
 
-    <!-- ===================================================== -->
-    <!-- FREE THROWS -->
-    <!-- ===================================================== -->
 
-    <div class="card mb-4">
+<!-- ===================================================== -->
+<!-- TWO POINT GRAPHS -->
+<!-- ===================================================== -->
 
-        <div class="card-header">
+<div class="row mb-5">
 
-            <strong>Free Throws</strong>
+    <div class="col-lg-6">
 
-        </div>
+        <div class="card shadow-sm">
 
-        <div class="card-body">
+            <div class="card-header bg-primary text-white">
 
-            <table class="table table-striped">
+                <strong>{{ home_team.team_name }}</strong>
 
-                <tr>
-                    <th>Made</th>
-                    <td>{{ analysis.shooting.free_throws.made }}</td>
-                </tr>
+                <br>
 
-                <tr>
-                    <th>Attempted</th>
-                    <td>{{ analysis.shooting.free_throws.attempted }}</td>
-                </tr>
+                Two Point Trend
 
-                <tr>
-                    <th>Percentage</th>
-                    <td>{{ analysis.shooting.free_throws.percentage }}%</td>
-                </tr>
+            </div>
 
-            </table>
+            <div class="card-body">
+
+                <canvas id="homeTwoChart"></canvas>
+
+            </div>
 
         </div>
 
     </div>
 
+    <div class="col-lg-6">
 
-    <!-- ===================================================== -->
-    <!-- BALL CONTROL -->
-    <!-- ===================================================== -->
+        <div class="card shadow-sm">
 
-    <div class="card mb-4">
+            <div class="card-header bg-success text-white">
 
-        <div class="card-header">
+                <strong>{{ away_team.team_name }}</strong>
 
-            <strong>Ball Control</strong>
+                <br>
 
-        </div>
+                Two Point Trend
 
-        <div class="card-body">
+            </div>
 
-            <table class="table table-striped">
+            <div class="card-body">
 
-                <tr>
-                    <th>Assists</th>
-                    <td>{{ analysis.ball_control.assists }}</td>
-                </tr>
+                <canvas id="awayTwoChart"></canvas>
 
-                <tr>
-                    <th>Turnovers</th>
-                    <td>{{ analysis.ball_control.turnovers }}</td>
-                </tr>
-
-                <tr>
-                    <th>Assist / Turnover Ratio</th>
-                    <td>{{ analysis.ball_control.assist_turnover_ratio }}</td>
-                </tr>
-
-            </table>
+            </div>
 
         </div>
 
     </div>
 
-
-    <!-- ===================================================== -->
-    <!-- DEFENSE -->
-    <!-- ===================================================== -->
-
-    <div class="card mb-4">
-
-        <div class="card-header">
-
-            <strong>Defense</strong>
-
-        </div>
-
-        <div class="card-body">
-
-            <table class="table table-striped">
-
-                <tr>
-                    <th>Rebounds</th>
-                    <td>{{ analysis.defense.rebounds }}</td>
-                </tr>
-
-                <tr>
-                    <th>Steals</th>
-                    <td>{{ analysis.defense.steals }}</td>
-                </tr>
-
-                <tr>
-                    <th>Blocks</th>
-                    <td>{{ analysis.defense.blocks }}</td>
-                </tr>
-
-            </table>
-
-        </div>
-
-    </div>
-
-
-    <!-- ===================================================== -->
-    <!-- ADVANCED METRICS -->
-    <!-- ===================================================== -->
-
-    <div class="card mb-4">
-
-        <div class="card-header">
-
-            <strong>Advanced Metrics</strong>
-
-        </div>
-
-        <div class="card-body">
-
-            <table class="table table-striped">
-
-                <tr>
-                    <th>Estimated Possessions</th>
-                    <td>{{ analysis.advanced_metrics.estimated_possessions }}</td>
-                </tr>
-
-                <tr>
-                    <th>Points Per Possession</th>
-                    <td>{{ analysis.advanced_metrics.points_per_possession }}</td>
-                </tr>
-
-                <tr>
-                    <th>Offensive Rating</th>
-                    <td>{{ analysis.advanced_metrics.offensive_rating }}</td>
-                </tr>
-
-                <tr>
-                    <th>Pace</th>
-                    <td>{{ analysis.advanced_metrics.pace }}</td>
-                </tr>
-
-            </table>
-
-        </div>
-
-    </div>
+</div>
 
 
     <!-- ===================================================== -->
@@ -368,5 +520,341 @@
     </div>
 
 </div>
+
+<script>
+
+// ==============================
+// Helper function
+// ==============================
+
+function createDataset(xValues, yValues) {
+
+    let data = [];
+
+    for (let i = 0; i < xValues.length; i++) {
+
+        data.push({
+
+            x: xValues[i],
+
+            y: yValues[i]
+
+        });
+
+    }
+
+    return data;
+
+}
+
+
+// ==============================
+// Common options
+// ==============================
+
+const commonOptions = {
+
+    responsive: true,
+
+    interaction: {
+
+        mode: "index",
+
+        intersect: false
+
+    },
+
+    scales: {
+
+        x: {
+
+            type: "linear",
+
+            title: {
+
+                display: true,
+
+                text: "Elapsed Seconds"
+
+            },
+
+            ticks: {
+
+                callback: function(value) {
+
+                    switch(value) {
+
+                        case 0:
+                            return "Start";
+
+                        case 600:
+                            return "Q1";
+
+                        case 1200:
+                            return "HT";
+
+                        case 1800:
+                            return "Q3";
+
+                        case 2400:
+                            return "FT";
+
+                        default:
+                            return "";
+                    }
+
+                }
+
+            }
+
+        },
+
+        y: {
+
+            beginAtZero: true,
+
+            title: {
+
+                display: true,
+
+                text: "Shots"
+
+            }
+
+        }
+
+    }
+
+};
+
+
+// ==============================
+// HOME 3PT
+// ==============================
+
+new Chart(
+
+    document.getElementById("homeThreeChart"),
+
+    {
+
+        type: "line",
+
+        data: {
+
+            datasets: [
+
+                {
+
+                    label: "3PA",
+
+                    data: createDataset(
+                        {{ home_labels|safe }},
+                        {{ home_three_pa|safe }}
+                    ),
+
+                    borderWidth: 3,
+
+                    tension: 0.3
+
+                },
+
+                {
+
+                    label: "3PM",
+
+                    data: createDataset(
+                        {{ home_labels|safe }},
+                        {{ home_three_pm|safe }}
+                    ),
+
+                    borderWidth: 3,
+
+                    tension: 0.3
+
+                }
+
+            ]
+
+        },
+
+        options: commonOptions
+
+    }
+
+);
+
+
+// ==============================
+// AWAY 3PT
+// ==============================
+
+new Chart(
+
+    document.getElementById("awayThreeChart"),
+
+    {
+
+        type: "line",
+
+        data: {
+
+            datasets: [
+
+                {
+
+                    label: "3PA",
+
+                    data: createDataset(
+                        {{ away_labels|safe }},
+                        {{ away_three_pa|safe }}
+                    ),
+
+                    borderWidth: 3,
+
+                    tension: 0.3
+
+                },
+
+                {
+
+                    label: "3PM",
+
+                    data: createDataset(
+                        {{ away_labels|safe }},
+                        {{ away_three_pm|safe }}
+                    ),
+
+                    borderWidth: 3,
+
+                    tension: 0.3
+
+                }
+
+            ]
+
+        },
+
+        options: commonOptions
+
+    }
+
+);
+
+
+// ==============================
+// HOME 2PT
+// ==============================
+
+new Chart(
+
+    document.getElementById("homeTwoChart"),
+
+    {
+
+        type: "line",
+
+        data: {
+
+            datasets: [
+
+                {
+
+                    label: "2PA",
+
+                    data: createDataset(
+                        {{ home_labels|safe }},
+                        {{ home_two_pa|safe }}
+                    ),
+
+                    borderWidth: 3,
+
+                    tension: 0.3
+
+                },
+
+                {
+
+                    label: "2PM",
+
+                    data: createDataset(
+                        {{ home_labels|safe }},
+                        {{ home_two_pm|safe }}
+                    ),
+
+                    borderWidth: 3,
+
+                    tension: 0.3
+
+                }
+
+            ]
+
+        },
+
+        options: commonOptions
+
+    }
+
+);
+
+
+// ==============================
+// AWAY 2PT
+// ==============================
+
+new Chart(
+
+    document.getElementById("awayTwoChart"),
+
+    {
+
+        type: "line",
+
+        data: {
+
+            datasets: [
+
+                {
+
+                    label: "2PA",
+
+                    data: createDataset(
+                        {{ away_labels|safe }},
+                        {{ away_two_pa|safe }}
+                    ),
+
+                    borderWidth: 3,
+
+                    tension: 0.3
+
+                },
+
+                {
+
+                    label: "2PM",
+
+                    data: createDataset(
+                        {{ away_labels|safe }},
+                        {{ away_two_pm|safe }}
+                    ),
+
+                    borderWidth: 3,
+
+                    tension: 0.3
+
+                }
+
+            ]
+
+        },
+
+        options: commonOptions
+
+    }
+
+);
+
+</script>
 
 {% endblock %}
