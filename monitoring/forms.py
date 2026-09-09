@@ -4,6 +4,7 @@ from django.forms import inlineformset_factory
 from .models import (
     Watch,
     WatchParameter,
+    StatAlertRule,
 )
 
 class WatchForm(forms.ModelForm):
@@ -139,6 +140,72 @@ WatchParameterFormSet = inlineformset_factory(
     Watch,
     WatchParameter,
     form=WatchParameterForm,
+    extra=1,
+    can_delete=True,
+)
+
+class StatAlertRuleForm(forms.ModelForm):
+    class Meta:
+        model = StatAlertRule
+        fields = [
+            "stat_type",
+            "team_scope",
+            "mode",
+            "silence_gap_minutes",
+            "burst_count",
+            "burst_window_minutes",
+            "expected_total",
+            "active",
+        ]
+        widgets = {
+            "stat_type": forms.Select(
+                attrs={"class": "form-select"}
+            ),
+            "team_scope": forms.Select(
+                attrs={"class": "form-select"}
+            ),
+            "mode": forms.Select(
+                attrs={"class": "form-select", "onchange": "toggleModeFields(this)"}
+            ),
+            "silence_gap_minutes": forms.NumberInput(
+                attrs={"class": "form-control", "placeholder": "e.g. 10"}
+            ),
+            "burst_count": forms.NumberInput(
+                attrs={"class": "form-control", "placeholder": "e.g. 5"}
+            ),
+            "burst_window_minutes": forms.NumberInput(
+                attrs={"class": "form-control", "placeholder": "e.g. 10"}
+            ),
+            "expected_total": forms.NumberInput(
+                attrs={"class": "form-control", "placeholder": "e.g. 10"}
+            ),
+            "active": forms.CheckboxInput(
+                attrs={"class": "form-check-input"}
+            ),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        mode = cleaned_data.get("mode")
+        silence_gap_minutes = cleaned_data.get("silence_gap_minutes")
+        burst_count = cleaned_data.get("burst_count")
+        burst_window_minutes = cleaned_data.get("burst_window_minutes")
+
+        if mode == "silence" and not silence_gap_minutes:
+            raise forms.ValidationError(
+                "Silence mode requires a gap (minutes) value."
+            )
+        if mode == "burst" and not (burst_count and burst_window_minutes):
+            raise forms.ValidationError(
+                "Burst mode requires both a count and a window (minutes)."
+            )
+        return cleaned_data
+
+
+StatAlertRuleFormSet = inlineformset_factory(
+    Watch,
+    StatAlertRule,
+    form=StatAlertRuleForm,
     extra=1,
     can_delete=True,
 )

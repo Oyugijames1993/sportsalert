@@ -25,6 +25,7 @@ from .models import (
 from .forms import (
     WatchForm,
     WatchParameterFormSet,
+    StatAlertRuleFormSet,
 )
 
 
@@ -131,59 +132,53 @@ class WatchCreateView(CreateView):
     form_class = WatchForm
     template_name = "monitoring/watch_form.html"
     success_url = reverse_lazy("watch-list")
-
     def get(self, request, *args, **kwargs):
-
         form = WatchForm()
-
         formset = WatchParameterFormSet()
-
+        stat_formset = StatAlertRuleFormSet()
         return render(
             request,
             self.template_name,
             {
                 "form": form,
                 "formset": formset,
+                "stat_formset": stat_formset,
             },
         )
-
     def post(self, request, *args, **kwargs):
-
         form = WatchForm(request.POST)
-
         if form.is_valid():
-
             watch = form.save()
-
             formset = WatchParameterFormSet(
                 request.POST,
                 instance=watch,
             )
-
-            if formset.is_valid():
-
+            stat_formset = StatAlertRuleFormSet(
+                request.POST,
+                instance=watch,
+            )
+            if formset.is_valid() and stat_formset.is_valid():
                 formset.save()
-
+                stat_formset.save()
                 return redirect(
                     self.success_url
                 )
-
         else:
-
             formset = WatchParameterFormSet(
                 request.POST
             )
-
+            stat_formset = StatAlertRuleFormSet(
+                request.POST
+            )
         return render(
             request,
             self.template_name,
             {
                 "form": form,
                 "formset": formset,
+                "stat_formset": stat_formset,
             },
         )
-
-
 # ==========================================================
 # UPDATE WATCH
 # ==========================================================
@@ -193,68 +188,64 @@ class WatchUpdateView(UpdateView):
     form_class = WatchForm
     template_name = "monitoring/watch_form.html"
     success_url = reverse_lazy("watch-list")
-
     def get(self, request, *args, **kwargs):
-
         self.object = self.get_object()
-
         form = WatchForm(
             instance=self.object
         )
-
         formset = WatchParameterFormSet(
             instance=self.object
         )
-
+        stat_formset = StatAlertRuleFormSet(
+            instance=self.object
+        )
         return render(
             request,
             self.template_name,
             {
                 "form": form,
                 "formset": formset,
+                "stat_formset": stat_formset,
                 "object": self.object,
             },
         )
-
     def post(self, request, *args, **kwargs):
-
         self.object = self.get_object()
-
         form = WatchForm(
             request.POST,
             instance=self.object,
         )
-
         formset = WatchParameterFormSet(
             request.POST,
             instance=self.object,
         )
-
+        stat_formset = StatAlertRuleFormSet(
+            request.POST,
+            instance=self.object,
+        )
         if (
             form.is_valid()
             and formset.is_valid()
+            and stat_formset.is_valid()
         ):
-
             watch = form.save()
-
             formset.instance = watch
             formset.save()
-
+            stat_formset.instance = watch
+            stat_formset.save()
             return redirect(
                 self.success_url
             )
-
         return render(
             request,
             self.template_name,
             {
                 "form": form,
                 "formset": formset,
+                "stat_formset": stat_formset,
                 "object": self.object,
             },
         )
-
-
 # ==========================================================
 # DELETE WATCH
 # ==========================================================

@@ -379,3 +379,196 @@ class Alert(models.Model):
     def __str__(self):
         return self.message
 
+
+
+# ── Football stat-tracking (time-since-last / burst alerting) ────────────────
+# A different alerting model from basketball's baseline/threshold deviation
+# system above: rather than "is scoring pace ahead/behind projection", this
+# tracks discrete countable events (fouls, shots, corners, etc.) and alerts
+# on either (a) silence — no new occurrence of a stat for N minutes, or
+# (b) burst — M or more occurrences within a rolling N-minute window.
+
+class StatAlertRule(models.Model):
+
+    STAT_TYPE_CHOICES = (
+        ('shots_on_goal',    'Shots on Goal'),
+        ('shots_off_goal',   'Shots off Goal'),
+        ('total_shots',      'Total Shots'),
+        ('blocked_shots',    'Blocked Shots'),
+        ('shots_insidebox',  'Shots Inside Box'),
+        ('shots_outsidebox', 'Shots Outside Box'),
+        ('fouls',            'Fouls'),
+        ('corner_kicks',     'Corner Kicks'),
+        ('offsides',         'Offsides'),
+        ('yellow_cards',     'Yellow Cards'),
+        ('red_cards',        'Red Cards'),
+        ('goalkeeper_saves', 'Goalkeeper Saves'),
+        ('total_passes',     'Total Passes'),
+        ('passes_accurate',  'Passes Accurate'),
+        # Not part of API-Football's standard statistics list — included
+        # per request in case a specific competition (e.g. Champions
+        # League) happens to provide them. If the API returns no data for
+        # these, they're simply never tracked — no error, no alert.
+        ('throw_ins',        'Throw-ins'),
+        ('goal_kicks',       'Goal Kicks'),
+    )
+
+    MODE_CHOICES = (
+        ('silence', 'Silence — alert if no new occurrence for N minutes'),
+        ('burst',   'Burst — alert if N or more occurrences within a window'),
+    )
+
+    TEAM_SCOPE_CHOICES = (
+        ('both', 'Either team'),
+        ('home', 'Home team only'),
+        ('away', 'Away team only'),
+    )
+
+    watch = models.ForeignKey(
+        Watch,
+        on_delete=models.CASCADE,
+        related_name='stat_alert_rules'
+    )
+
+    stat_type = models.CharField(
+        max_length=30,
+        choices=STAT_TYPE_CHOICES
+    )
+
+    team_scope = models.CharField(
+        max_length=10,
+        choices=TEAM_SCOPE_CHOICES,
+        default='both'
+    )
+
+    mode = models.CharField(
+        max_length=10,
+        choices=MODE_CHOICES
+    )
+
+    # ── Silence mode ───────────────────────────────────────────────────
+    silence_gap_minutes = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Alert if no new occurrence of this stat for this many minutes."
+    )
+
+    # ── Burst mode ─────────────────────────────────────────────────────
+    burst_count = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Number of occurrences that triggers a burst alert."
+    )
+    burst_window_minutes = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Rolling time window (minutes) the burst count is measured over."
+    )
+
+    # User's own reference target for this stat's final count — not used
+    # in any alert logic, just displayed alongside the running actual
+    # total so the user can see the deviation at a glance.
+    expected_total = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Your own expected/target total for this stat by full-time (reference only)."
+    )
+
+    active = models.BooleanField(
+        default=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+        unique_together = ('watch', 'stat_type', 'team_scope', 'mode')
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.mode == 'silence' and not self.silence_gap_minutes:
+            raise ValidationError('Silence mode requires a gap (minutes) value.')
+        if self.mode == 'burst' and not (self.burst_count and self.burst_window_minutes):
+            raise ValidationError('Burst mode requires both a count and a window (minutes).')
+
+    def __str__(self):
+        if self.mode == 'silence':
+            detail = f'silence {self.silence_gap_minutes}m'
+        else:
+            detail = f'burst {self.burst_count}/{self.burst_window_minutes}m'
+        return f'{self.watch} — {self.get_stat_type_display()} ({detail})'
+
+
+class StatOccurrence(models.Model):
+    """
+    One row per detected increase in a tracked stat's running total for one
+    team. Polling compares the latest value from the API against the last
+    known value for (watch, stat_type, team) and logs the delta here —
+    this is what silence/burst rules are evaluated against.
+    """
+    watch = models.ForeignKey(
+        Watch,
+        on_delete=models.CASCADE,
+        related_name='stat_occurrences'
+    )
+
+    stat_type = models.CharField(
+        max_length=30,
+        choices=StatAlertRule.STAT_TYPE_CHOICES
+    )
+
+    team = models.CharField(
+        max_length=10,
+        choices=(('home', 'Home'), ('away', 'Away')),
+    )
+
+    value_at_time = models.PositiveIntegerField(
+        help_text="Cumulative stat total at the moment this occurrence was detected."
+    )
+
+    detected_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+        ordering = ['detected_at']
+
+    def __str__(self):
+        return f'{self.watch} — {self.get_stat_type_display()} ({self.team}) = {self.value_at_time} @ {self.detected_at}'
+
+
+class StatAlert(models.Model):
+
+    ALERT_TYPE_CHOICES = (
+        ('silence', 'Silence'),
+        ('burst',   'Burst'),
+    )
+
+    watch = models.ForeignKey(
+        Watch,
+        on_delete=models.CASCADE,
+        related_name='stat_alerts'
+    )
+
+    rule = models.ForeignKey(
+        StatAlertRule,
+        on_delete=models.CASCADE,
+        related_name='fired_alerts',
+        null=True,
+        blank=True
+    )
+
+    alert_type = models.CharField(
+        max_length=10,
+        choices=ALERT_TYPE_CHOICES
+    )
+
+    message = models.TextField()
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def __str__(self):
+        return self.message

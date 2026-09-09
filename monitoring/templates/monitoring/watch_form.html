@@ -23,6 +23,7 @@
                     {% csrf_token %}
 
                     {{ formset.management_form }}
+                    {{ stat_formset.management_form }}
 
                     <h5 class="mb-3">
                         Match Information
@@ -214,6 +215,132 @@
 
                     </template>
 
+                    <hr>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+
+                        <h5 class="mb-0">
+                            Football Stat Alert Rules
+                        </h5>
+
+                        <button
+                            type="button"
+                            id="add-stat-rule"
+                            class="btn btn-success btn-sm">
+                            + Add Stat Rule
+                        </button>
+
+                    </div>
+
+                    <p class="text-muted small">
+                        Choose a stat to track, then set either a
+                        <strong>silence</strong> alert (no new occurrence for
+                        N minutes) or a <strong>burst</strong> alert (N or
+                        more occurrences within a window). If the API
+                        doesn't provide data for a chosen stat in a given
+                        match, it simply won't be tracked — no error.
+                    </p>
+
+                    <div class="table-responsive">
+
+                        <table class="table table-bordered">
+
+                            <thead>
+                                <tr>
+                                    <th>Stat</th>
+                                    <th>Team</th>
+                                    <th>Mode</th>
+                                    <th>Silence gap (min)</th>
+                                    <th>Burst count</th>
+                                    <th>Burst window (min)</th>
+                                    <th>Expected total</th>
+                                    <th>Active</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="stat-rule-table">
+
+                                {% for stat_form in stat_formset %}
+
+                                <tr class="stat-rule-row">
+
+                                    <td>{{ stat_form.stat_type }}</td>
+                                    <td>{{ stat_form.team_scope }}</td>
+                                    <td>{{ stat_form.mode }}</td>
+                                    <td>{{ stat_form.silence_gap_minutes }}</td>
+                                    <td>{{ stat_form.burst_count }}</td>
+                                    <td>{{ stat_form.burst_window_minutes }}</td>
+                                    <td>{{ stat_form.expected_total }}</td>
+                                    <td>{{ stat_form.active }}</td>
+
+                                    <td>
+
+                                        {% for hidden in stat_form.hidden_fields %}
+                                            {{ hidden }}
+                                        {% endfor %}
+
+                                        {% if stat_form.DELETE %}
+                                            <div class="d-none">
+                                                {{ stat_form.DELETE }}
+                                            </div>
+                                        {% endif %}
+
+                                        <button
+                                            type="button"
+                                            class="btn btn-danger btn-sm remove-stat-row">
+                                            Remove
+                                        </button>
+
+                                    </td>
+
+                                </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                    <template id="empty-stat-form-template">
+
+                        <tr class="stat-rule-row">
+
+                            <td>{{ stat_formset.empty_form.stat_type }}</td>
+                            <td>{{ stat_formset.empty_form.team_scope }}</td>
+                            <td>{{ stat_formset.empty_form.mode }}</td>
+                            <td>{{ stat_formset.empty_form.silence_gap_minutes }}</td>
+                            <td>{{ stat_formset.empty_form.burst_count }}</td>
+                            <td>{{ stat_formset.empty_form.burst_window_minutes }}</td>
+                            <td>{{ stat_formset.empty_form.expected_total }}</td>
+                            <td>{{ stat_formset.empty_form.active }}</td>
+
+                            <td>
+
+                                {% for hidden in stat_formset.empty_form.hidden_fields %}
+                                    {{ hidden }}
+                                {% endfor %}
+
+                                {% if stat_formset.empty_form.DELETE %}
+                                    <div class="d-none">
+                                        {{ stat_formset.empty_form.DELETE }}
+                                    </div>
+                                {% endif %}
+
+                                <button
+                                    type="button"
+                                    class="btn btn-danger btn-sm remove-stat-row">
+                                    Remove
+                                </button>
+
+                            </td>
+
+                        </tr>
+
+                    </template>
+
                     <div class="mt-4">
 
                         <button
@@ -329,6 +456,40 @@ document.addEventListener(
 
             }
         );
+
+        // Football Stat Alert Rules — same add/remove pattern as Parameters
+        const addStatButton = document.getElementById("add-stat-rule");
+        const statTable = document.getElementById("stat-rule-table");
+        const statTemplate = document.getElementById("empty-stat-form-template");
+        const statTotalForms =
+            document.getElementById("id_stat_alert_rules-TOTAL_FORMS");
+
+        if (addStatButton) {
+            addStatButton.addEventListener("click", function () {
+                const formIndex = parseInt(statTotalForms.value);
+                let html = statTemplate.innerHTML.replace(
+                    /__prefix__/g,
+                    formIndex
+                );
+                statTable.insertAdjacentHTML("beforeend", html);
+                statTotalForms.value = formIndex + 1;
+            });
+        }
+
+        document.addEventListener("click", function (event) {
+            if (event.target.classList.contains("remove-stat-row")) {
+                const row = event.target.closest("tr");
+                const deleteField = row.querySelector(
+                    'input[type="checkbox"][name$="-DELETE"]'
+                );
+                if (deleteField) {
+                    deleteField.checked = true;
+                    row.style.display = "none";
+                } else {
+                    row.remove();
+                }
+            }
+        });
 
     }
 );

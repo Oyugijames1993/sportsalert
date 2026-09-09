@@ -454,72 +454,129 @@
     <!-- ===================================================== -->
     <!-- SNAPSHOT HISTORY -->
     <!-- ===================================================== -->
+<div class="row">
 
-    <div class="card mb-5">
+    <!-- HOME -->
 
-        <div class="card-header">
+    <div class="col-lg-6">
 
-            <strong>Snapshot History</strong>
+        <div class="card mb-4">
+
+            <div class="card-header bg-primary text-white">
+
+                <strong>{{ home_team.team_name }}</strong>
+
+            </div>
+
+            <div class="card-body table-responsive">
+
+                <table class="table table-bordered table-sm">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Clock</th>
+                            <th>Pts</th>
+                            <th>FGM</th>
+                            <th>FGA</th>
+                            <th>3PM</th>
+                            <th>3PA</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    {% for s in home_snapshots %}
+
+                        <tr>
+
+                            <td>{{ s.game_clock }}</td>
+                            <td>{{ s.points }}</td>
+                            <td>{{ s.field_goal_made }}</td>
+                            <td>{{ s.field_goal_attempted }}</td>
+                            <td>{{ s.three_pt_made }}</td>
+                            <td>{{ s.three_pt_attempted }}</td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
 
         </div>
 
-        <div class="card-body table-responsive">
+    </div>
 
-            <table class="table table-bordered table-hover">
 
-                <thead>
+    <!-- AWAY -->
 
-                <tr>
+    <div class="col-lg-6">
 
-                    <th>Quarter</th>
-                    <th>Clock</th>
-                    <th>Points</th>
-                    <th>FGM</th>
-                    <th>FGA</th>
-                    <th>3PM</th>
-                    <th>3PA</th>
-                    <th>FTM</th>
-                    <th>FTA</th>
-                    <th>REB</th>
-                    <th>AST</th>
-                    <th>TO</th>
+        <div class="card mb-4">
 
-                </tr>
+            <div class="card-header bg-success text-white">
 
-                </thead>
+                <strong>{{ away_team.team_name }}</strong>
 
-                <tbody>
+            </div>
 
-                {% for s in snapshots %}
+            <div class="card-body table-responsive">
 
-                <tr>
+                <table class="table table-bordered table-sm">
 
-                    <td>{{ s.quarter }}</td>
-                    <td>{{ s.game_clock }}</td>
-                    <td>{{ s.points }}</td>
-                    <td>{{ s.field_goal_made }}</td>
-                    <td>{{ s.field_goal_attempted }}</td>
-                    <td>{{ s.three_pt_made }}</td>
-                    <td>{{ s.three_pt_attempted }}</td>
-                    <td>{{ s.free_throw_made }}</td>
-                    <td>{{ s.free_throw_attempted }}</td>
-                    <td>{{ s.rebounds }}</td>
-                    <td>{{ s.assists }}</td>
-                    <td>{{ s.turnovers }}</td>
+                    <thead>
 
-                </tr>
+                        <tr>
 
-                {% endfor %}
+                            <th>Clock</th>
+                            <th>Pts</th>
+                            <th>FGM</th>
+                            <th>FGA</th>
+                            <th>3PM</th>
+                            <th>3PA</th>
 
-                </tbody>
+                        </tr>
 
-            </table>
+                    </thead>
+
+                    <tbody>
+
+                    {% for s in away_snapshots %}
+
+                        <tr>
+
+                            <td>{{ s.game_clock }}</td>
+                            <td>{{ s.points }}</td>
+                            <td>{{ s.field_goal_made }}</td>
+                            <td>{{ s.field_goal_attempted }}</td>
+                            <td>{{ s.three_pt_made }}</td>
+                            <td>{{ s.three_pt_attempted }}</td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
 
         </div>
 
     </div>
 
 </div>
+
+{% endblock %}
+{% block scripts %}
 
 <script>
 
@@ -529,15 +586,15 @@
 
 function createDataset(xValues, yValues) {
 
-    let data = [];
+    const data = [];
 
     for (let i = 0; i < xValues.length; i++) {
 
         data.push({
 
-            x: xValues[i],
+            x: Number(xValues[i]),
 
-            y: yValues[i]
+            y: Number(yValues[i])
 
         });
 
@@ -549,16 +606,18 @@ function createDataset(xValues, yValues) {
 
 
 // ==============================
-// Common options
+// Common Options
 // ==============================
 
 const commonOptions = {
 
     responsive: true,
 
+    maintainAspectRatio: false,
+
     interaction: {
 
-        mode: "index",
+        mode: "nearest",
 
         intersect: false
 
@@ -578,11 +637,17 @@ const commonOptions = {
 
             },
 
+            min: 0,
+
+            max: 2400,
+
             ticks: {
+
+                stepSize: 600,
 
                 callback: function(value) {
 
-                    switch(value) {
+                    switch (value) {
 
                         case 0:
                             return "Start";
@@ -601,6 +666,7 @@ const commonOptions = {
 
                         default:
                             return "";
+
                     }
 
                 }
@@ -651,11 +717,7 @@ new Chart(
                     data: createDataset(
                         {{ home_labels|safe }},
                         {{ home_three_pa|safe }}
-                    ),
-
-                    borderWidth: 3,
-
-                    tension: 0.3
+                    )
 
                 },
 
@@ -666,11 +728,7 @@ new Chart(
                     data: createDataset(
                         {{ home_labels|safe }},
                         {{ home_three_pm|safe }}
-                    ),
-
-                    borderWidth: 3,
-
-                    tension: 0.3
+                    )
 
                 }
 
@@ -708,11 +766,7 @@ new Chart(
                     data: createDataset(
                         {{ away_labels|safe }},
                         {{ away_three_pa|safe }}
-                    ),
-
-                    borderWidth: 3,
-
-                    tension: 0.3
+                    )
 
                 },
 
@@ -723,11 +777,7 @@ new Chart(
                     data: createDataset(
                         {{ away_labels|safe }},
                         {{ away_three_pm|safe }}
-                    ),
-
-                    borderWidth: 3,
-
-                    tension: 0.3
+                    )
 
                 }
 
@@ -765,11 +815,7 @@ new Chart(
                     data: createDataset(
                         {{ home_labels|safe }},
                         {{ home_two_pa|safe }}
-                    ),
-
-                    borderWidth: 3,
-
-                    tension: 0.3
+                    )
 
                 },
 
@@ -780,11 +826,7 @@ new Chart(
                     data: createDataset(
                         {{ home_labels|safe }},
                         {{ home_two_pm|safe }}
-                    ),
-
-                    borderWidth: 3,
-
-                    tension: 0.3
+                    )
 
                 }
 
@@ -822,11 +864,7 @@ new Chart(
                     data: createDataset(
                         {{ away_labels|safe }},
                         {{ away_two_pa|safe }}
-                    ),
-
-                    borderWidth: 3,
-
-                    tension: 0.3
+                    )
 
                 },
 
@@ -837,11 +875,7 @@ new Chart(
                     data: createDataset(
                         {{ away_labels|safe }},
                         {{ away_two_pm|safe }}
-                    ),
-
-                    borderWidth: 3,
-
-                    tension: 0.3
+                    )
 
                 }
 
