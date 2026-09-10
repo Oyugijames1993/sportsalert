@@ -1,0 +1,195 @@
+{% extends "monitoring/base.html" %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+        <h2>
+            {{ watch.home_team }} vs {{ watch.away_team }}
+        </h2>
+
+        <p class="text-muted mb-0" id="statSubtitle">
+            {{ stat_label }}
+        </p>
+    </div>
+
+    <a href="{% url 'watch-detail' watch.pk %}"
+       class="btn btn-secondary">
+        Back to Watch
+    </a>
+
+</div>
+
+<div class="card shadow-sm" style="background:#0f1720;">
+
+    <div class="card-header d-flex justify-content-between align-items-center"
+         style="background:#0f1720; border-bottom:1px solid #263041;">
+        <h5 class="mb-0" style="color:#e6edf3;">{{ stat_label }} — Home / Away / Total</h5>
+        <span id="expectedBadge" class="badge" style="background:#6c757d; display:none;"></span>
+    </div>
+
+    <div class="card-body">
+        <div style="height:600px;">
+            <canvas id="trendChart"></canvas>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+const gridColor = "rgba(255,255,255,0.06)";
+const textColor = "#9fb0c3";
+
+const chart = new Chart(
+    document.getElementById("trendChart"),
+    {
+        type: "scatter",
+        data: {
+            datasets: [
+                {
+                    label: "Home",
+                    data: [],
+                    showLine: true,
+                    borderColor: "#26a69a",
+                    backgroundColor: "rgba(38,166,154,0.08)",
+                    borderWidth: 1,
+                    pointRadius: 2,
+                    pointHoverRadius: 6,
+                    stepped: "before",
+                    fill: false,
+                },
+                {
+                    label: "Away",
+                    data: [],
+                    showLine: true,
+                    borderColor: "#ef5350",
+                    backgroundColor: "rgba(239,83,80,0.08)",
+                    borderWidth: 1,
+                    pointRadius: 2,
+                    pointHoverRadius: 6,
+                    stepped: "before",
+                    fill: false,
+                },
+                {
+                    label: "Total",
+                    data: [],
+                    showLine: true,
+                    borderColor: "#42a5f5",
+                    backgroundColor: "rgba(66,165,245,0.12)",
+                    borderWidth: 1.5,
+                    pointRadius: 2,
+                    pointHoverRadius: 6,
+                    stepped: "before",
+                    fill: true,
+                },
+                {
+                    label: "Expected",
+                    data: [],
+                    showLine: true,
+                    borderColor: "#f2c94c",
+                    borderWidth: 1,
+                    pointRadius: 0,
+                    borderDash: [8, 6],
+                    fill: false,
+                },
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            interaction: {
+                intersect: false,
+                mode: "nearest"
+            },
+            plugins: {
+                legend: {
+                    position: "top",
+                    labels: {
+                        color: textColor,
+                        usePointStyle: true,
+                        boxWidth: 8,
+                    }
+                },
+                tooltip: {
+                    backgroundColor: "#1c2836",
+                    titleColor: "#e6edf3",
+                    bodyColor: "#e6edf3",
+                    borderColor: "#2f3e50",
+                    borderWidth: 1,
+                    callbacks: {
+                        title: function(context) {
+                            return "Minute " + context[0].parsed.x;
+                        },
+                        label: function(context) {
+                            return context.dataset.label + ": " + context.parsed.y;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    type: "linear",
+                    title: {
+                        display: true,
+                        text: "Minutes Elapsed",
+                        color: textColor,
+                    },
+                    grid: { color: gridColor },
+                    ticks: { color: textColor },
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: "Count",
+                        color: textColor,
+                    },
+                    beginAtZero: true,
+                    grid: { color: gridColor },
+                    ticks: { color: textColor, precision: 0 },
+                }
+            }
+        }
+    }
+);
+
+function loadChartData() {
+    fetch("{% url 'football-stat-data' watch.pk stat_type %}")
+        .then(response => response.json())
+        .then(data => {
+            chart.data.datasets[0].label = data.home_team + " (Home)";
+            chart.data.datasets[1].label = data.away_team + " (Away)";
+
+            chart.data.datasets[0].data = data.home;
+            chart.data.datasets[1].data = data.away;
+            chart.data.datasets[2].data = data.total;
+            chart.data.datasets[3].data = data.expected;
+
+            const badge = document.getElementById("expectedBadge");
+            if (data.expected_total !== null && data.expected_total !== undefined) {
+                chart.data.datasets[3].label = "Expected (" + data.expected_total + ")";
+                badge.textContent = "Expected = " + data.expected_total + " " + "{{ stat_label }}";
+                badge.style.display = "inline-block";
+            } else {
+                chart.data.datasets[3].label = "Expected";
+                badge.style.display = "none";
+            }
+
+            chart.update();
+        })
+        .catch(error => {
+            console.error("Polling error:", error);
+        });
+}
+
+loadChartData();
+
+setInterval(loadChartData, 60000);
+
+</script>
+
+{% endblock %}

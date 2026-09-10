@@ -20,6 +20,9 @@ from .models import (
     MatchSnapshot,
     TeamStatistic,
     Alert,
+    StatAlertRule,
+    StatOccurrence,
+    StatAlert,
 )
 
 from .forms import (
@@ -120,7 +123,39 @@ class WatchDetailView(DetailView):
             .order_by("-created_at")
         )
 
+        # ── Football stat-tracking data ────────────────────────────────
+        stat_rules = list(watch.stat_alert_rules.all().order_by("stat_type", "mode"))
+
+        # Latest recorded value per (stat_type, team) — for the summary table.
+        latest_values = {}
+        for occ in watch.stat_occurrences.order_by("stat_type", "team", "detected_at"):
+            latest_values[(occ.stat_type, occ.team)] = occ.value_at_time
+
+        stat_summary = []
+        seen_stats = set()
+        for rule in stat_rules:
+            if rule.stat_type in seen_stats:
+                continue
+            seen_stats.add(rule.stat_type)
+            stat_summary.append({
+                "stat_type": rule.get_stat_type_display(),
+                "stat_type_key": rule.stat_type,
+                "home_value": latest_values.get((rule.stat_type, "home"), 0),
+                "away_value": latest_values.get((rule.stat_type, "away"), 0),
+                "expected_total": rule.expected_total,
+            })
+
+        context["stat_rules"] = stat_rules
+        context["stat_summary"] = stat_summary
+        context["stat_occurrences"] = (
+            watch.stat_occurrences.order_by("-detected_at")[:50]
+        )
+        context["stat_alerts"] = (
+            watch.stat_alerts.order_by("-created_at")[:20]
+        )
+
         return context
+
 
 
 # ==========================================================
@@ -694,3 +729,83 @@ def live_games(request):
             "games": games,
         },
     )
+
+# ==========================================================
+# FOOTBALL STAT TREND (home / away / total time series)
+# ==========================================================
+
+def football_stat_trend(request, watch_id, stat_type):
+    watch = get_object_or_404(Watch, pk=watch_id)
+    stat_label = dict(StatAlertRule.STAT_TYPE_CHOICES).get(stat_type, stat_type)
+
+    return render(
+        request,
+        "monitoring/football_stat_trend.html",
+        {
+            "watch": watch,
+            "stat_type": stat_type,
+            "stat_label": stat_label,
+        },
+    )
+
+
+def football_stat_data(request, watch_id, stat_type):
+    watch = get_object_or_404(Watch, pk=watch_id)
+
+    occurrences = list(
+        StatOccurrence.objects
+        .filter(watch=watch, stat_type=stat_type)
+        .order_by("detected_at")
+    )
+
+    anchor = watch.monitoring_start or watch.created_at
+
+    home_series = []
+    away_series = []
+    total_series = []
+
+    latest_home = 0
+    latest_away = 0
+
+    for occ in occurrences:
+        minutes_elapsed = round((occ.detected_at - anchor).total_seconds() / 60, 1)
+
+        if occ.team == "home":
+            latest_home = occ.value_at_time
+        else:
+            latest_away = occ.value_at_time
+
+        point = {"x": minutes_elapsed, "y": occ.value_at_time}
+        if occ.team == "home":
+            home_series.append(point)
+        else:
+            away_series.append(point)
+
+        total_series.append({"x": minutes_elapsed, "y": latest_home + latest_away})
+
+    # Flat reference line at the user's own expected total, spanning the
+    # same time range as the actual data collected so far.
+    rule_with_expected = (
+        watch.stat_alert_rules
+        .filter(stat_type=stat_type, expected_total__isnull=False)
+        .first()
+    )
+    expected_total = rule_with_expected.expected_total if rule_with_expected else None
+    expected_series = []
+    if expected_total is not None and total_series:
+        min_x = min(p["x"] for p in total_series)
+        max_x = max(p["x"] for p in total_series)
+        expected_series = [
+            {"x": min_x, "y": expected_total},
+            {"x": max_x, "y": expected_total},
+        ]
+
+    return JsonResponse({
+        "home": home_series,
+        "away": away_series,
+        "total": total_series,
+        "expected": expected_series,
+        "expected_total": expected_total,
+        "home_team": watch.home_team,
+        "away_team": watch.away_team,
+    })

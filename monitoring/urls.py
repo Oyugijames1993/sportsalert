@@ -18,6 +18,8 @@ from .views import (
     watch_data,
     team_analysis,
     live_games,
+    football_stat_trend,
+    football_stat_data,
 )
 
 urlpatterns = [
@@ -127,6 +129,16 @@ urlpatterns = [
         "live-games/",
         live_games,
         name="live-games"
+    ),
+    path(
+        "watch/<int:watch_id>/football-stat/<str:stat_type>/trend/",
+        football_stat_trend,
+        name="football-stat-trend",
+    ),
+    path(
+        "watch/<int:watch_id>/football-stat/<str:stat_type>/data/",
+        football_stat_data,
+        name="football-stat-data",
     ),
 
 ]
