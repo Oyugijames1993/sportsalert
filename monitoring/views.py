@@ -23,12 +23,16 @@ from .models import (
     StatAlertRule,
     StatOccurrence,
     StatAlert,
+    StatOddsModel,
 )
+
+from . import odds_model
 
 from .forms import (
     WatchForm,
     WatchParameterFormSet,
     StatAlertRuleFormSet,
+    StatOddsModelFormSet,
 )
 
 
@@ -154,6 +158,27 @@ class WatchDetailView(DetailView):
             watch.stat_alerts.order_by("-created_at")[:20]
         )
 
+        # ── Live odds boards ────────────────────────────────────────────
+        odds_boards = []
+        t = watch.elapsed_minutes or 0
+        for row in watch.stat_odds_models.all():
+            home_val = latest_values.get((row.stat_type, "home"), 0)
+            away_val = latest_values.get((row.stat_type, "away"), 0)
+            k = home_val + away_val
+            try:
+                r = odds_model.get_dispersion_r(row.stat_type, row.dispersion_r)
+                board = odds_model.odds_board(
+                    mu_0=row.mu_0, r=r, t=t, k=k, overround=row.overround
+                )
+                board["stat_type"] = row.get_stat_type_display()
+                board["observed_k"] = k
+                odds_boards.append(board)
+            except (ValueError, ZeroDivisionError):
+                pass
+
+        context["odds_boards"] = odds_boards
+        context["elapsed_minutes"] = t
+
         return context
 
 
@@ -171,6 +196,7 @@ class WatchCreateView(CreateView):
         form = WatchForm()
         formset = WatchParameterFormSet()
         stat_formset = StatAlertRuleFormSet()
+        odds_formset = StatOddsModelFormSet()
         return render(
             request,
             self.template_name,
@@ -178,6 +204,7 @@ class WatchCreateView(CreateView):
                 "form": form,
                 "formset": formset,
                 "stat_formset": stat_formset,
+                "odds_formset": odds_formset,
             },
         )
     def post(self, request, *args, **kwargs):
@@ -192,9 +219,14 @@ class WatchCreateView(CreateView):
                 request.POST,
                 instance=watch,
             )
-            if formset.is_valid() and stat_formset.is_valid():
+            odds_formset = StatOddsModelFormSet(
+                request.POST,
+                instance=watch,
+            )
+            if formset.is_valid() and stat_formset.is_valid() and odds_formset.is_valid():
                 formset.save()
                 stat_formset.save()
+                odds_formset.save()
                 return redirect(
                     self.success_url
                 )
@@ -205,6 +237,9 @@ class WatchCreateView(CreateView):
             stat_formset = StatAlertRuleFormSet(
                 request.POST
             )
+            odds_formset = StatOddsModelFormSet(
+                request.POST
+            )
         return render(
             request,
             self.template_name,
@@ -212,6 +247,7 @@ class WatchCreateView(CreateView):
                 "form": form,
                 "formset": formset,
                 "stat_formset": stat_formset,
+                "odds_formset": odds_formset,
             },
         )
 # ==========================================================
@@ -234,6 +270,9 @@ class WatchUpdateView(UpdateView):
         stat_formset = StatAlertRuleFormSet(
             instance=self.object
         )
+        odds_formset = StatOddsModelFormSet(
+            instance=self.object
+        )
         return render(
             request,
             self.template_name,
@@ -241,6 +280,7 @@ class WatchUpdateView(UpdateView):
                 "form": form,
                 "formset": formset,
                 "stat_formset": stat_formset,
+                "odds_formset": odds_formset,
                 "object": self.object,
             },
         )
@@ -258,16 +298,23 @@ class WatchUpdateView(UpdateView):
             request.POST,
             instance=self.object,
         )
+        odds_formset = StatOddsModelFormSet(
+            request.POST,
+            instance=self.object,
+        )
         if (
             form.is_valid()
             and formset.is_valid()
             and stat_formset.is_valid()
+            and odds_formset.is_valid()
         ):
             watch = form.save()
             formset.instance = watch
             formset.save()
             stat_formset.instance = watch
             stat_formset.save()
+            odds_formset.instance = watch
+            odds_formset.save()
             return redirect(
                 self.success_url
             )
@@ -278,6 +325,7 @@ class WatchUpdateView(UpdateView):
                 "form": form,
                 "formset": formset,
                 "stat_formset": stat_formset,
+                "odds_formset": odds_formset,
                 "object": self.object,
             },
         )

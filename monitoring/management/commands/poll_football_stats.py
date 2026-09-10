@@ -97,6 +97,7 @@ class Command(BaseCommand):
         fixture_data = fixtures[0]
         status_short = fixture_data["fixture"]["status"]["short"]
         watch.game_status = status_short
+        watch.elapsed_minutes = fixture_data["fixture"]["status"].get("elapsed")
         watch.last_polled = now
         if not watch.monitoring_started:
             watch.monitoring_started = True

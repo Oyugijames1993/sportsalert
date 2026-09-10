@@ -5,6 +5,7 @@ from .models import (
     Watch,
     WatchParameter,
     StatAlertRule,
+    StatOddsModel,
 )
 
 class WatchForm(forms.ModelForm):
@@ -206,6 +207,40 @@ StatAlertRuleFormSet = inlineformset_factory(
     Watch,
     StatAlertRule,
     form=StatAlertRuleForm,
+    extra=1,
+    can_delete=True,
+)
+
+
+class StatOddsModelForm(forms.ModelForm):
+    class Meta:
+        model = StatOddsModel
+        fields = [
+            "stat_type",
+            "mu_0",
+            "dispersion_r",
+            "overround",
+        ]
+        widgets = {
+            "stat_type": forms.Select(
+                attrs={"class": "form-select odds-stat-type", "onchange": "fillDefaultDispersion(this)"}
+            ),
+            "mu_0": forms.NumberInput(
+                attrs={"class": "form-control", "step": "0.01", "placeholder": "e.g. 20.36"}
+            ),
+            "dispersion_r": forms.NumberInput(
+                attrs={"class": "form-control odds-dispersion-r", "step": "0.01", "placeholder": "leave blank for default"}
+            ),
+            "overround": forms.NumberInput(
+                attrs={"class": "form-control", "step": "0.01", "placeholder": "e.g. 1.10"}
+            ),
+        }
+
+
+StatOddsModelFormSet = inlineformset_factory(
+    Watch,
+    StatOddsModel,
+    form=StatOddsModelForm,
     extra=1,
     can_delete=True,
 )

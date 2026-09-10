@@ -24,6 +24,7 @@
 
                     {{ formset.management_form }}
                     {{ stat_formset.management_form }}
+                    {{ odds_formset.management_form }}
 
                     <h5 class="mb-3">
                         Match Information
@@ -341,6 +342,119 @@
 
                     </template>
 
+                    <hr>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+
+                        <h5 class="mb-0">
+                            Live Odds Model Inputs
+                        </h5>
+
+                        <button
+                            type="button"
+                            id="add-odds-row"
+                            class="btn btn-success btn-sm">
+                            + Add Stat
+                        </button>
+
+                    </div>
+
+                    <p class="text-muted small">
+                        For each stat you want a live 5-line odds board for,
+                        enter the pre-match expected mean (mu&#8320;) from a
+                        real bookmaker's odds ladder for this fixture.
+                        Dispersion is optional — leave blank to use the
+                        fitted per-stat default.
+                    </p>
+
+                    <div class="table-responsive">
+
+                        <table class="table table-bordered">
+
+                            <thead>
+                                <tr>
+                                    <th>Stat</th>
+                                    <th>Expected Mean (mu&#8320;)</th>
+                                    <th>Dispersion (r)</th>
+                                    <th>Overround</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="odds-row-table">
+
+                                {% for odds_form in odds_formset %}
+
+                                <tr class="odds-row">
+
+                                    <td>{{ odds_form.stat_type }}</td>
+                                    <td>{{ odds_form.mu_0 }}</td>
+                                    <td>{{ odds_form.dispersion_r }}</td>
+                                    <td>{{ odds_form.overround }}</td>
+
+                                    <td>
+
+                                        {% for hidden in odds_form.hidden_fields %}
+                                            {{ hidden }}
+                                        {% endfor %}
+
+                                        {% if odds_form.DELETE %}
+                                            <div class="d-none">
+                                                {{ odds_form.DELETE }}
+                                            </div>
+                                        {% endif %}
+
+                                        <button
+                                            type="button"
+                                            class="btn btn-danger btn-sm remove-odds-row">
+                                            Remove
+                                        </button>
+
+                                    </td>
+
+                                </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                    <template id="empty-odds-form-template">
+
+                        <tr class="odds-row">
+
+                            <td>{{ odds_formset.empty_form.stat_type }}</td>
+                            <td>{{ odds_formset.empty_form.mu_0 }}</td>
+                            <td>{{ odds_formset.empty_form.dispersion_r }}</td>
+                            <td>{{ odds_formset.empty_form.overround }}</td>
+
+                            <td>
+
+                                {% for hidden in odds_formset.empty_form.hidden_fields %}
+                                    {{ hidden }}
+                                {% endfor %}
+
+                                {% if odds_formset.empty_form.DELETE %}
+                                    <div class="d-none">
+                                        {{ odds_formset.empty_form.DELETE }}
+                                    </div>
+                                {% endif %}
+
+                                <button
+                                    type="button"
+                                    class="btn btn-danger btn-sm remove-odds-row">
+                                    Remove
+                                </button>
+
+                            </td>
+
+                        </tr>
+
+                    </template>
+
                     <div class="mt-4">
 
                         <button
@@ -478,6 +592,62 @@ document.addEventListener(
 
         document.addEventListener("click", function (event) {
             if (event.target.classList.contains("remove-stat-row")) {
+                const row = event.target.closest("tr");
+                const deleteField = row.querySelector(
+                    'input[type="checkbox"][name$="-DELETE"]'
+                );
+                if (deleteField) {
+                    deleteField.checked = true;
+                    row.style.display = "none";
+                } else {
+                    row.remove();
+                }
+            }
+        });
+
+        // Fitted per-stat dispersion defaults — mirrors
+        // monitoring/odds_model.py DEFAULT_DISPERSION_R. Auto-fills the
+        // Dispersion field when a Stat is picked, so the number actually
+        // being used is visible (and still editable) rather than hidden
+        // behind an unseen server-side default.
+        const DEFAULT_DISPERSION_R = {
+            "fouls": 40.17,
+            "corner_kicks": 21.22,
+            "goal_kicks": 30.71,
+            "shots_on_goal": 35.60,
+            "throw_ins": 54.55,
+        };
+
+        window.fillDefaultDispersion = function (selectEl) {
+            const row = selectEl.closest("tr");
+            const dispersionInput = row.querySelector(".odds-dispersion-r");
+            const defaultVal = DEFAULT_DISPERSION_R[selectEl.value];
+            if (dispersionInput && defaultVal !== undefined) {
+                dispersionInput.value = defaultVal;
+            }
+        };
+
+        // Live Odds Model Inputs — same add/remove pattern as above
+        const addOddsButton = document.getElementById("add-odds-row");
+        const oddsTable = document.getElementById("odds-row-table");
+        const oddsTemplate = document.getElementById("empty-odds-form-template");
+        const oddsTotalForms =
+            document.getElementById("id_stat_odds_models-TOTAL_FORMS");
+
+        if (addOddsButton) {
+            addOddsButton.addEventListener("click", function () {
+                const formIndex = parseInt(oddsTotalForms.value);
+                let html = oddsTemplate.innerHTML.replace(
+                    /__prefix__/g,
+                    formIndex
+                );
+                oddsTable.insertAdjacentHTML("beforeend", html);
+                oddsTotalForms.value = formIndex + 1;
+            });
+        }
+
+        document.addEventListener("click", function (event) {
+            if (event.target.classList.contains("remove-odds-row")) {
                 const row = event.target.closest("tr");
                 const deleteField = row.querySelector(
                     'input[type="checkbox"][name$="-DELETE"]'

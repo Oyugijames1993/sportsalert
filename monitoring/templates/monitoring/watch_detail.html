@@ -382,6 +382,76 @@
 
 {% if watch.sport == "football" %}
 
+<!-- LIVE ODDS BOARDS -->
+
+{% if odds_boards %}
+
+    <div class="card shadow-sm mb-4" style="background:#0f1720;">
+
+        <div class="card-header py-2" style="background:#0f1720; border-bottom:1px solid #263041;">
+            <span style="color:#e6edf3; font-size:0.85rem; font-weight:600; letter-spacing:0.02em; text-transform:uppercase;">
+                Live Odds Boards
+            </span>
+            <span style="color:#6b7d91; font-size:0.75rem;">
+                &middot; elapsed {{ elapsed_minutes }}&prime;
+            </span>
+        </div>
+
+        <div class="card-body py-3">
+
+            {% for board in odds_boards %}
+
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span style="color:#c9d4e0; font-size:0.8rem; font-weight:600;">
+                        {{ board.stat_type }}
+                    </span>
+                    <span style="background:#1e3a5f; color:#7fb8f0; font-size:0.7rem; padding:2px 7px; border-radius:3px; font-weight:500;">
+                        {{ board.mu_live }}
+                    </span>
+                    <span style="color:#5c6b7a; font-size:0.7rem;">
+                        {{ board.observed_k }} so far
+                    </span>
+                </div>
+
+                <div class="table-responsive mb-3">
+
+                    <table class="table table-sm mb-0" style="color:#c9d4e0; font-size:0.78rem;">
+
+                        <thead>
+                            <tr style="color:#6b7d91; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.03em;">
+                                <th class="fw-normal">Line</th>
+                                <th class="fw-normal">Over</th>
+                                <th class="fw-normal">Under</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for row in board.rows %}
+
+                                <tr {% if row.label|slice:"5:" == board.center|stringformat:"s" %}style="background:rgba(66,165,245,0.10);"{% endif %}>
+                                    <td>{{ row.label }}</td>
+                                    <td>{{ row.odds_over }}</td>
+                                    <td>{{ row.odds_under }}</td>
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+{% endif %}
+
+
 <!-- FOOTBALL STAT SUMMARY -->
 
 <div class="card shadow-sm mb-4">

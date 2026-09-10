@@ -54,6 +54,11 @@ class Watch(models.Model):
         default=""
     )
 
+    elapsed_minutes = models.PositiveIntegerField(
+        null=True,
+        blank=True
+    )
+
     last_polled = models.DateTimeField(
         null=True,
         blank=True
@@ -572,3 +577,54 @@ class StatAlert(models.Model):
 
     def __str__(self):
         return self.message
+
+
+class StatOddsModel(models.Model):
+    """
+    Holds the inputs needed to project a live, bookmaker-style 5-line odds
+    board for one (watch, stat_type) pair — see monitoring/odds_model.py
+    for the actual math.
+
+    mu_0 is entered by the user per match (the pre-match expected total
+    for this stat, read off a real bookmaker's odds ladder for this
+    fixture). dispersion_r is NOT entered per match — it's a per-stat-type
+    constant, fitted once from a representative odds ladder and reused
+    across matches (see DEFAULT_DISPERSION_R in odds_model.py). It's still
+    stored here (rather than hardcoded) so it can be overridden or
+    refined later without a code change.
+    """
+    watch = models.ForeignKey(
+        Watch,
+        on_delete=models.CASCADE,
+        related_name='stat_odds_models'
+    )
+
+    stat_type = models.CharField(
+        max_length=30,
+        choices=StatAlertRule.STAT_TYPE_CHOICES
+    )
+
+    mu_0 = models.FloatField(
+        help_text="Pre-match expected total for this stat, from the bookmaker's own odds ladder for this match."
+    )
+
+    dispersion_r = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="Negative binomial dispersion for this stat. Leave blank to use the fitted per-stat default."
+    )
+
+    overround = models.FloatField(
+        default=1.10,
+        help_text="Bookmaker margin to reapply when pricing the live odds board, e.g. 1.10 = 10% overround."
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+        unique_together = ('watch', 'stat_type')
+
+    def __str__(self):
+        return f'{self.watch} — {self.get_stat_type_display()} (mu_0={self.mu_0})'
