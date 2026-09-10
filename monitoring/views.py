@@ -172,6 +172,7 @@ class WatchDetailView(DetailView):
                 )
                 board["stat_type"] = row.get_stat_type_display()
                 board["observed_k"] = k
+                board["mu_0"] = row.mu_0
                 odds_boards.append(board)
             except (ValueError, ZeroDivisionError):
                 pass

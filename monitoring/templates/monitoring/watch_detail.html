@@ -2,6 +2,23 @@
 
 {% block content %}
 
+<style>
+  #watch-detail-page h1 { font-size: 1.35rem; font-weight: 600; }
+  #watch-detail-page h2 { font-size: 1.1rem; font-weight: 600; }
+  #watch-detail-page h3, #watch-detail-page h5, #watch-detail-page h6 { font-size: 0.9rem; font-weight: 600; }
+  #watch-detail-page p, #watch-detail-page .card-body,
+  #watch-detail-page td, #watch-detail-page th,
+  #watch-detail-page li { font-size: 0.82rem; }
+  #watch-detail-page .card-header { font-size: 0.85rem; padding: 0.55rem 0.9rem; }
+  #watch-detail-page .btn { font-size: 0.78rem; padding: 0.3rem 0.7rem; }
+  #watch-detail-page .badge { font-size: 0.68rem; font-weight: 500; }
+  #watch-detail-page .text-muted { font-size: 0.78rem; }
+  #watch-detail-page table { font-size: 0.8rem; }
+</style>
+
+<div id="watch-detail-page">
+
+
 <div class="d-flex justify-content-between align-items-center mb-4">
 
     <div>
@@ -405,10 +422,13 @@
                     <span style="color:#c9d4e0; font-size:0.8rem; font-weight:600;">
                         {{ board.stat_type }}
                     </span>
-                    <span style="background:#1e3a5f; color:#7fb8f0; font-size:0.7rem; padding:2px 7px; border-radius:3px; font-weight:500;">
-                        {{ board.mu_live }}
+                    <span style="color:#6b7d91; font-size:0.68rem;">
+                        expected {{ board.mu_0 }}
                     </span>
-                    <span style="color:#5c6b7a; font-size:0.7rem;">
+                    <span style="background:#1e3a5f; color:#7fb8f0; font-size:0.7rem; padding:2px 7px; border-radius:3px; font-weight:500;">
+                        live {{ board.mu_live }}
+                    </span>
+                    <span style="color:#5c6b7a; font-size:0.68rem;">
                         {{ board.observed_k }} so far
                     </span>
                 </div>
@@ -634,6 +654,8 @@
 {% endif %}
 
     </div>
+
+</div>
 
 </div>
 
