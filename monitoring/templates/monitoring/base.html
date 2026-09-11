@@ -199,6 +199,23 @@
 
         hr { border-color: var(--border); opacity: 1; }
 
+        /* Odds board tables — forced white for legibility, overrides
+           Bootstrap's own td/th color which otherwise wins over an
+           inline color set on the ancestor <table> tag. */
+        .odds-table td, .odds-table th { color: #ffffff !important; }
+
+        /* List groups */
+        .list-group-item {
+            background: var(--surface-2);
+            border-color: var(--border);
+            color: var(--text);
+        }
+        .list-group-item-action:hover,
+        .list-group-item-action:focus {
+            background: #1c2833;
+            color: var(--text);
+        }
+
         ::-webkit-scrollbar { width: 10px; height: 10px; }
         ::-webkit-scrollbar-track { background: var(--bg); }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
