@@ -416,6 +416,10 @@ class StatAlertRule(models.Model):
         # these, they're simply never tracked — no error, no alert.
         ('throw_ins',        'Throw-ins'),
         ('goal_kicks',       'Goal Kicks'),
+        # Sourced from the fixture STATUS call (goals.home/goals.away),
+        # not the statistics endpoint like everything else here — see
+        # poll_football_stats.py for the special handling this requires.
+        ('total_goals',      'Total Goals'),
     )
 
     MODE_CHOICES = (

@@ -119,6 +119,29 @@ class Command(BaseCommand):
             self.stdout.write("  No stat alert rules or odds models on this watch — skipping stats call.")
             return
 
+        stat_types_needed = set(r.stat_type for r in rules) | set(o.stat_type for o in odds_rows)
+
+        # total_goals is a special case — it comes from the fixture STATUS
+        # call (already fetched above), not the statistics endpoint like
+        # every other tracked stat, so it's handled before we even decide
+        # whether a statistics call is needed at all.
+        if 'total_goals' in stat_types_needed:
+            goals = fixture_data.get('goals', {})
+            for team in ('home', 'away'):
+                value = goals.get(team)
+                if value is not None:
+                    self._record_occurrence_if_increased(watch, 'total_goals', team, value)
+
+        other_stat_types = stat_types_needed - {'total_goals'}
+        if not other_stat_types:
+            self.stdout.write("  Only total_goals tracked — statistics call not needed this cycle.")
+            for rule in rules:
+                self._evaluate_rule(watch, rule, now)
+            t = watch.elapsed_minutes or 0
+            for row in odds_rows:
+                self._evaluate_confidence(watch, row, t)
+            return
+
         stats_resp = requests.get(
             f"{API_BASE}/fixtures/statistics",
             headers=HEADERS,
@@ -135,11 +158,7 @@ class Command(BaseCommand):
         # team second, in fixture order.
         team_blocks = {"home": stats_response[0], "away": stats_response[1]}
 
-        # Record occurrences for every stat_type either a rule or an
-        # odds model cares about, then evaluate each.
-        stat_types_needed = set(r.stat_type for r in rules) | set(o.stat_type for o in odds_rows)
-
-        for stat_type in stat_types_needed:
+        for stat_type in other_stat_types:
             api_label = STAT_TYPE_TO_API_LABEL.get(stat_type)
             if not api_label:
                 continue

@@ -36,6 +36,8 @@ DEFAULT_DISPERSION_R = {
     'goal_kicks':    30.71,
     'shots_on_goal': 35.60,   # fit against "Shots On Target" ladder
     'throw_ins':     54.55,
+    'total_goals':   24.58,
+    'yellow_cards':  13.64,
 }
 
 DEFAULT_MATCH_MINUTES = 90
