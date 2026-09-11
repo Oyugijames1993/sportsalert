@@ -11,7 +11,10 @@ from django.views.generic import (
     UpdateView,
     DeleteView,
 )
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
+import io
+from django.core.management import call_command
+from django.conf import settings
 
 
 from .models import (
@@ -891,4 +894,27 @@ def possession_data(request, watch_id):
         "away": away_series,
         "home_team": watch.home_team,
         "away_team": watch.away_team,
+    })
+
+
+# ==========================================================
+# POLL TRIGGER — for external cron services (Render's free
+# tier has no background worker, so polling is triggered by
+# an outside scheduler hitting this URL periodically instead
+# of a continuously-running script).
+# ==========================================================
+
+def poll_trigger(request, token):
+    if token != settings.POLL_TRIGGER_TOKEN:
+        return HttpResponseForbidden("Invalid token.")
+
+    output = io.StringIO()
+    try:
+        call_command("poll_football_stats", stdout=output)
+    except Exception as e:
+        return JsonResponse({"status": "error", "detail": str(e)}, status=500)
+
+    return JsonResponse({
+        "status": "ok",
+        "output": output.getvalue(),
     })

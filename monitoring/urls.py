@@ -21,6 +21,7 @@ from .views import (
     football_stat_trend,
     football_stat_data,
     possession_data,
+    poll_trigger,
 )
 
 urlpatterns = [
@@ -145,6 +146,11 @@ urlpatterns = [
         "watch/<int:watch_id>/possession-data/",
         possession_data,
         name="possession-data",
+    ),
+    path(
+        "poll-trigger/<str:token>/",
+        poll_trigger,
+        name="poll-trigger",
     ),
 
 ]
