@@ -17,25 +17,191 @@
         rel="stylesheet"
     >
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
     <style>
 
+        :root {
+            --bg:          #0b1119;
+            --surface:     #111a25;
+            --surface-2:   #16202c;
+            --border:      #232f3d;
+            --text:        #e6edf3;
+            --text-muted:  #8c9bac;
+            --text-faint:  #5c6b7a;
+            --accent:      #4f9cf9;
+            --accent-dim:  #1e3a5f;
+            --green:       #2fbf85;
+            --red:         #ef5350;
+            --amber:       #f2c94c;
+            --radius:      10px;
+        }
+
+        * { box-sizing: border-box; }
+
         body {
-
-            background: #f8f9fa;
-
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 0.9rem;
         }
 
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--text);
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+        h1 { font-size: 1.5rem; }
+        h2 { font-size: 1.2rem; }
+        h3, h4 { font-size: 1.05rem; }
+        h5 { font-size: 0.95rem; }
+        h6 { font-size: 0.85rem; }
+
+        p, td, th, li, label { color: var(--text); }
+
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { color: #7ab8ff; }
+
+        .text-muted { color: var(--text-muted) !important; }
+
+        /* Navbar */
+        .navbar {
+            background: var(--surface) !important;
+            border-bottom: 1px solid var(--border);
+        }
         .navbar-brand {
-
-            font-weight: bold;
-
+            font-weight: 700;
+            color: var(--text) !important;
+            letter-spacing: -0.02em;
+        }
+        .nav-link {
+            color: var(--text-muted) !important;
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 0.5rem 0.85rem !important;
+            border-radius: 6px;
+            transition: color 0.15s, background 0.15s;
+        }
+        .nav-link:hover {
+            color: var(--text) !important;
+            background: var(--surface-2);
         }
 
+        /* Cards */
         .card {
-
-            border-radius: 12px;
-
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: none !important;
         }
+        .card-header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.75rem 1rem;
+        }
+        .card-body { padding: 1rem; }
+
+        /* Tables */
+        .table {
+            color: var(--text);
+            font-size: 0.82rem;
+            --bs-table-bg: transparent;
+        }
+        .table thead th {
+            color: var(--text-faint);
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-bottom: 1px solid var(--border);
+            padding: 0.6rem 0.75rem;
+        }
+        .table td {
+            border-color: var(--border);
+            padding: 0.55rem 0.75rem;
+            vertical-align: middle;
+        }
+        .table-striped > tbody > tr:nth-of-type(odd) > * {
+            background: rgba(255,255,255,0.02);
+            color: var(--text);
+        }
+        .table-hover > tbody > tr:hover > * {
+            background: var(--surface-2);
+            color: var(--text);
+        }
+        .table-bordered { border-color: var(--border); }
+        .table-bordered th, .table-bordered td { border-color: var(--border); }
+
+        /* Forms */
+        .form-control, .form-select {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 0.85rem;
+        }
+        .form-control:focus, .form-select:focus {
+            background: var(--surface-2);
+            border-color: var(--accent);
+            color: var(--text);
+            box-shadow: 0 0 0 3px rgba(79,156,249,0.15);
+        }
+        .form-control::placeholder { color: var(--text-faint); }
+        .form-label { color: var(--text-muted); font-size: 0.8rem; font-weight: 500; }
+        .form-check-input {
+            background-color: var(--surface-2);
+            border-color: var(--border);
+        }
+        .form-check-input:checked {
+            background-color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Buttons */
+        .btn {
+            font-size: 0.82rem;
+            font-weight: 500;
+            border-radius: 7px;
+            padding: 0.4rem 0.85rem;
+        }
+        .btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        .btn-primary:hover {
+            background: #3d8ce8;
+            border-color: #3d8ce8;
+        }
+        .btn-secondary {
+            background: var(--surface-2);
+            border-color: var(--border);
+            color: var(--text-muted);
+        }
+        .btn-secondary:hover {
+            background: #1c2833;
+            color: var(--text);
+        }
+        .btn-success { background: var(--green); border-color: var(--green); }
+        .btn-danger  { background: var(--red);   border-color: var(--red); }
+        .btn-warning { background: var(--amber); border-color: var(--amber); color: #1a1300; }
+        .btn-outline-primary { color: var(--accent); border-color: var(--accent); }
+
+        /* Badges */
+        .badge { font-weight: 500; font-size: 0.7rem; padding: 0.32em 0.6em; }
+        .bg-success { background: var(--green) !important; }
+        .bg-danger  { background: var(--red) !important; }
+        .bg-warning { background: var(--amber) !important; color: #1a1300 !important; }
+        .bg-primary { background: var(--accent) !important; }
+
+        hr { border-color: var(--border); opacity: 1; }
+
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
 
     </style>
 
@@ -43,7 +209,7 @@
 
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+<nav class="navbar navbar-expand-lg mb-4">
 
     <div class="container">
 
@@ -56,7 +222,7 @@
 
         </a>
 
-        <div class="navbar-nav">
+        <div class="navbar-nav flex-row gap-1">
 
             <a
                 class="nav-link"
