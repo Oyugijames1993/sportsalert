@@ -158,6 +158,14 @@ class Command(BaseCommand):
         # team second, in fixture order.
         team_blocks = {"home": stats_response[0], "away": stats_response[1]}
 
+        # Possession is captured whenever a statistics call happens
+        # anyway, regardless of whether it's in other_stat_types — it's
+        # display-only, not opt-in like the alert/odds-board stats.
+        for team in ("home", "away"):
+            value = self._extract_possession_value(team_blocks[team])
+            if value is not None:
+                self._record_possession(watch, team, value)
+
         for stat_type in other_stat_types:
             api_label = STAT_TYPE_TO_API_LABEL.get(stat_type)
             if not api_label:
@@ -189,6 +197,40 @@ class Command(BaseCommand):
                 except (TypeError, ValueError):
                     return None
         return None
+
+    def _extract_possession_value(self, team_block):
+        for stat in team_block.get("statistics", []):
+            if stat.get("type") == "Ball Possession":
+                raw = stat.get("value")
+                if raw is None:
+                    return None
+                try:
+                    return int(str(raw).replace("%", "").strip())
+                except (TypeError, ValueError):
+                    return None
+        return None
+
+    def _record_possession(self, watch, team, value):
+        """
+        Unlike _record_occurrence_if_increased, possession can go up or
+        down — so this records a new point whenever the value CHANGES at
+        all, not just when it increases. Reuses the StatOccurrence table
+        (stat_type='possession') purely as a time-series log; it isn't
+        used by any silence/burst rule or odds board.
+        """
+        last = (
+            StatOccurrence.objects
+            .filter(watch=watch, stat_type='possession', team=team)
+            .order_by('-detected_at')
+            .first()
+        )
+        if last is None or last.value_at_time != value:
+            StatOccurrence.objects.create(
+                watch=watch,
+                stat_type='possession',
+                team=team,
+                value_at_time=value,
+            )
 
     def _record_occurrence_if_increased(self, watch, stat_type, team, value):
         last = (

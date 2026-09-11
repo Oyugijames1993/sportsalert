@@ -858,3 +858,37 @@ def football_stat_data(request, watch_id, stat_type):
         "home_team": watch.home_team,
         "away_team": watch.away_team,
     })
+
+
+# ==========================================================
+# POSSESSION DATA (mirrored/butterfly chart — home above the
+# x-axis, away below it)
+# ==========================================================
+
+def possession_data(request, watch_id):
+    watch = get_object_or_404(Watch, pk=watch_id)
+
+    anchor = watch.monitoring_start or watch.created_at
+
+    home_series = []
+    away_series = []
+
+    for occ in (
+        StatOccurrence.objects
+        .filter(watch=watch, stat_type='possession')
+        .order_by('detected_at')
+    ):
+        minutes_elapsed = round((occ.detected_at - anchor).total_seconds() / 60, 1)
+        point = {"x": minutes_elapsed, "y": occ.value_at_time}
+        if occ.team == "home":
+            home_series.append(point)
+        else:
+            # Negated so it plots below the x-axis, mirroring home.
+            away_series.append({"x": minutes_elapsed, "y": -occ.value_at_time})
+
+    return JsonResponse({
+        "home": home_series,
+        "away": away_series,
+        "home_team": watch.home_team,
+        "away_team": watch.away_team,
+    })

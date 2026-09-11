@@ -210,6 +210,29 @@
         </div>
 
     </div>
+
+{% if watch.sport == "football" %}
+
+<!-- POSSESSION -->
+
+<div class="card shadow-sm mb-4" style="background:#0f1720;">
+
+    <div class="card-header" style="background:#0f1720; border-bottom:1px solid #263041;">
+        <span style="color:#e6edf3; font-size:0.85rem; font-weight:600; letter-spacing:0.02em; text-transform:uppercase;">
+            Possession
+        </span>
+    </div>
+
+    <div class="card-body">
+        <div style="height:260px;">
+            <canvas id="possessionChart"></canvas>
+        </div>
+    </div>
+
+</div>
+
+{% endif %}
+
         <!-- RECENT ALERTS -->
 
         <div class="card shadow-sm mb-4">
@@ -658,5 +681,101 @@
 </div>
 
 </div>
+
+{% if watch.sport == "football" %}
+<script>
+(function () {
+    const el = document.getElementById("possessionChart");
+    if (!el) return;
+
+    const chart = new Chart(el, {
+        type: "line",
+        data: {
+            datasets: [
+                {
+                    label: "{{ watch.home_team }}",
+                    data: [],
+                    borderColor: "#26a69a",
+                    backgroundColor: "rgba(38,166,154,0.15)",
+                    borderWidth: 1.5,
+                    pointRadius: 0,
+                    stepped: "before",
+                    fill: "origin",
+                },
+                {
+                    label: "{{ watch.away_team }}",
+                    data: [],
+                    borderColor: "#ef5350",
+                    backgroundColor: "rgba(239,83,80,0.15)",
+                    borderWidth: 1.5,
+                    pointRadius: 0,
+                    stepped: "before",
+                    fill: "origin",
+                },
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            parsing: false,
+            interaction: { intersect: false, mode: "nearest" },
+            plugins: {
+                legend: {
+                    position: "top",
+                    labels: { color: "#9fb0c3", usePointStyle: true, boxWidth: 8 }
+                },
+                tooltip: {
+                    backgroundColor: "#1c2836",
+                    titleColor: "#e6edf3",
+                    bodyColor: "#e6edf3",
+                    callbacks: {
+                        label: function (context) {
+                            const pct = Math.abs(context.parsed.y);
+                            return context.dataset.label + ": " + pct + "%";
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    type: "linear",
+                    title: { display: true, text: "Minutes Elapsed", color: "#9fb0c3" },
+                    grid: { color: "rgba(255,255,255,0.06)" },
+                    ticks: { color: "#9fb0c3" },
+                },
+                y: {
+                    min: -100,
+                    max: 100,
+                    grid: {
+                        color: function (ctx) {
+                            return ctx.tick.value === 0 ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.06)";
+                        }
+                    },
+                    ticks: {
+                        color: "#9fb0c3",
+                        callback: function (value) { return Math.abs(value) + "%"; }
+                    },
+                }
+            }
+        }
+    });
+
+    function loadPossession() {
+        fetch("{% url 'possession-data' watch.pk %}")
+            .then(response => response.json())
+            .then(data => {
+                chart.data.datasets[0].data = data.home;
+                chart.data.datasets[1].data = data.away;
+                chart.update();
+            })
+            .catch(error => console.error("Possession fetch error:", error));
+    }
+
+    loadPossession();
+    setInterval(loadPossession, 60000);
+})();
+</script>
+{% endif %}
 
 {% endblock %}

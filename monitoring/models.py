@@ -420,6 +420,11 @@ class StatAlertRule(models.Model):
         # not the statistics endpoint like everything else here — see
         # poll_football_stats.py for the special handling this requires.
         ('total_goals',      'Total Goals'),
+        # Display-only — not used for silence/burst rules or odds
+        # boards (possession fluctuates rather than accumulating, so the
+        # count-based math elsewhere doesn't apply). Just captured and
+        # shown as a live time-series chart.
+        ('possession',       'Possession'),
     )
 
     MODE_CHOICES = (
