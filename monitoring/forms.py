@@ -220,6 +220,7 @@ class StatOddsModelForm(forms.ModelForm):
             "mu_0",
             "dispersion_r",
             "overround",
+            "confidence_threshold",
         ]
         widgets = {
             "stat_type": forms.Select(
@@ -233,6 +234,9 @@ class StatOddsModelForm(forms.ModelForm):
             ),
             "overround": forms.NumberInput(
                 attrs={"class": "form-control", "step": "0.01", "placeholder": "e.g. 1.10"}
+            ),
+            "confidence_threshold": forms.NumberInput(
+                attrs={"class": "form-control", "step": "0.01", "placeholder": "e.g. 0.80"}
             ),
         }
 

@@ -1,31 +1,28 @@
 """
-Polls API-Football for tracked football matches and evaluates each
-StatAlertRule (silence / burst) configured on them.
+Polls API-Football for tracked football matches and evaluates:
+  - StatAlertRule (silence / burst) — optional, per-stat alert rules
+  - StatOddsModel (confidence) — fires when any line's live-projected
+    fair win probability crosses the user's chosen confidence threshold
 
 Uses TWO API calls per watch per poll cycle:
   1. /fixtures?id={match_id}       — current match status (to know when to
                                       stop polling a finished match)
   2. /fixtures/statistics?fixture={match_id} — per-team stat totals
 
-This is double the request cost of the basketball monitor_matches.py
-command (which used one call per watch). Factor this into your polling
-interval / how many matches you track simultaneously on the free tier
-(100 requests/day).
-
 If a chosen stat_type isn't covered by the API for a given match/league
 (e.g. throw-ins, goal kicks — not part of API-Football's standard list),
 the API simply won't return that stat — no error, it's just not tracked
-for that match, matching the intended graceful behavior.
+for that match.
 
 Run with: python manage.py poll_football_stats
-Typically scheduled on a loop by run_scheduler.py, same as the basketball
-monitor_matches command.
+Typically scheduled on a loop by run_football_scheduler.py.
 """
 import requests
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from monitoring.models import Watch, StatAlertRule, StatOccurrence, StatAlert
+from monitoring.models import Watch, StatOccurrence, StatAlert
+from monitoring import odds_model
 
 API_BASE = "https://v3.football.api-sports.io"
 HEADERS = {"x-apisports-key": settings.API_SPORTS_KEY}
@@ -58,7 +55,7 @@ FINISHED_STATUSES = {"FT", "AET", "PEN", "PST", "CANC", "ABD", "AWD", "WO"}
 
 
 class Command(BaseCommand):
-    help = "Poll live football matches and evaluate stat alert rules"
+    help = "Poll live football matches, track stats, and evaluate alert rules"
 
     def handle(self, *args, **kwargs):
         now = timezone.now()
@@ -116,8 +113,10 @@ class Command(BaseCommand):
 
         # ── 2. Statistics ───────────────────────────────────────────────
         rules = list(watch.stat_alert_rules.filter(active=True))
-        if not rules:
-            self.stdout.write("  No active stat alert rules on this watch — skipping stats call.")
+        odds_rows = list(watch.stat_odds_models.all())
+
+        if not rules and not odds_rows:
+            self.stdout.write("  No stat alert rules or odds models on this watch — skipping stats call.")
             return
 
         stats_resp = requests.get(
@@ -136,21 +135,26 @@ class Command(BaseCommand):
         # team second, in fixture order.
         team_blocks = {"home": stats_response[0], "away": stats_response[1]}
 
-        for rule in rules:
-            teams_to_check = ["home", "away"] if rule.team_scope == "both" else [rule.team_scope]
-            api_label = STAT_TYPE_TO_API_LABEL.get(rule.stat_type)
+        # Record occurrences for every stat_type either a rule or an
+        # odds model cares about, then evaluate each.
+        stat_types_needed = set(r.stat_type for r in rules) | set(o.stat_type for o in odds_rows)
+
+        for stat_type in stat_types_needed:
+            api_label = STAT_TYPE_TO_API_LABEL.get(stat_type)
             if not api_label:
                 continue
-
-            for team in teams_to_check:
+            for team in ("home", "away"):
                 value = self._extract_stat_value(team_blocks[team], api_label)
                 if value is None:
-                    # Not provided for this match/competition — skip silently.
-                    continue
+                    continue  # not provided for this match/competition — skip silently
+                self._record_occurrence_if_increased(watch, stat_type, team, value)
 
-                self._record_occurrence_if_increased(watch, rule.stat_type, team, value)
-
+        for rule in rules:
             self._evaluate_rule(watch, rule, now)
+
+        t = watch.elapsed_minutes or 0
+        for row in odds_rows:
+            self._evaluate_confidence(watch, row, t)
 
     def _extract_stat_value(self, team_block, api_label):
         for stat in team_block.get("statistics", []):
@@ -200,7 +204,6 @@ class Command(BaseCommand):
                 gap_minutes = (now - last.detected_at).total_seconds() / 60
                 if gap_minutes < rule.silence_gap_minutes:
                     continue
-                # Already fired since this occurrence? Don't repeat.
                 already_fired = StatAlert.objects.filter(
                     rule=rule, alert_type='silence', created_at__gte=last.detected_at
                 ).exists()
@@ -237,3 +240,54 @@ class Command(BaseCommand):
                     watch=watch, rule=rule, alert_type='burst', message=message
                 )
                 self.stdout.write(self.style.WARNING(f"  ALERT (burst): {message}"))
+
+    def _evaluate_confidence(self, watch, row, t):
+        """
+        Computes the live odds board for this StatOddsModel row and fires
+        a confidence alert the first time any line's fair win probability
+        (Over or Under) reaches the user's chosen threshold. Dedup is by
+        checking whether an alert already exists mentioning that exact
+        line+side for this odds_model row — so each specific line only
+        ever fires once, but a newly-safe line as the match progresses
+        still fires fresh.
+        """
+        latest_home = (
+            StatOccurrence.objects
+            .filter(watch=watch, stat_type=row.stat_type, team='home')
+            .order_by('-detected_at').first()
+        )
+        latest_away = (
+            StatOccurrence.objects
+            .filter(watch=watch, stat_type=row.stat_type, team='away')
+            .order_by('-detected_at').first()
+        )
+        k = (latest_home.value_at_time if latest_home else 0) + \
+            (latest_away.value_at_time if latest_away else 0)
+
+        try:
+            r = odds_model.get_dispersion_r(row.stat_type, row.dispersion_r)
+            board = odds_model.odds_board(mu_0=row.mu_0, r=r, t=t, k=k, overround=row.overround)
+        except (ValueError, ZeroDivisionError):
+            return
+
+        for line_row in board['rows']:
+            p_over = line_row['p_over_fair']
+            p_under = 1 - p_over
+
+            for side, prob in (('Over', p_over), ('Under', p_under)):
+                if prob < row.confidence_threshold:
+                    continue
+                signature = f"{side} {line_row['label'].split()[-1]}"  # e.g. "Over 21"
+                already_fired = StatAlert.objects.filter(
+                    odds_model=row, alert_type='confidence', message__icontains=signature
+                ).exists()
+                if already_fired:
+                    continue
+                message = (
+                    f"{watch}: {row.get_stat_type_display()} — {signature} "
+                    f"has reached {prob*100:.0f}% confidence (threshold {row.confidence_threshold*100:.0f}%)."
+                )
+                StatAlert.objects.create(
+                    watch=watch, odds_model=row, alert_type='confidence', message=message
+                )
+                self.stdout.write(self.style.WARNING(f"  ALERT (confidence): {message}"))

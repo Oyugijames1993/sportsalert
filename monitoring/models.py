@@ -546,8 +546,9 @@ class StatOccurrence(models.Model):
 class StatAlert(models.Model):
 
     ALERT_TYPE_CHOICES = (
-        ('silence', 'Silence'),
-        ('burst',   'Burst'),
+        ('silence',    'Silence'),
+        ('burst',      'Burst'),
+        ('confidence', 'Confidence'),
     )
 
     watch = models.ForeignKey(
@@ -558,6 +559,16 @@ class StatAlert(models.Model):
 
     rule = models.ForeignKey(
         StatAlertRule,
+        on_delete=models.CASCADE,
+        related_name='fired_alerts',
+        null=True,
+        blank=True
+    )
+
+    # Used for alert_type='confidence' — links back to the odds-model row
+    # (mu_0/r/overround) whose live-projected board crossed the threshold.
+    odds_model = models.ForeignKey(
+        'StatOddsModel',
         on_delete=models.CASCADE,
         related_name='fired_alerts',
         null=True,
@@ -617,6 +628,11 @@ class StatOddsModel(models.Model):
     overround = models.FloatField(
         default=1.10,
         help_text="Bookmaker margin to reapply when pricing the live odds board, e.g. 1.10 = 10% overround."
+    )
+
+    confidence_threshold = models.FloatField(
+        default=0.80,
+        help_text="Fire a confidence alert once any line's fair win probability reaches this level, e.g. 0.80 = 80%."
     )
 
     created_at = models.DateTimeField(
