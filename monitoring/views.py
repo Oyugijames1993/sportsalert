@@ -176,6 +176,11 @@ class WatchDetailView(DetailView):
                 board["stat_type"] = row.get_stat_type_display()
                 board["observed_k"] = k
                 board["mu_0"] = row.mu_0
+                board["variation_status"] = odds_model.variation_status(
+                    mu_0=row.mu_0, r=r, mu_live=board["mu_live"], overround=row.overround,
+                    pre_match_odds=row.pre_match_odds, odds_margin=row.odds_margin,
+                    variation_threshold=row.variation_threshold,
+                )
                 odds_boards.append(board)
             except (ValueError, ZeroDivisionError):
                 pass

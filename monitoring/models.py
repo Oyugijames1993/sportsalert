@@ -558,6 +558,7 @@ class StatAlert(models.Model):
         ('silence',    'Silence'),
         ('burst',      'Burst'),
         ('confidence', 'Confidence'),
+        ('variation',   'Variation'),
     )
 
     watch = models.ForeignKey(
@@ -639,9 +640,18 @@ class StatOddsModel(models.Model):
         help_text="Bookmaker margin to reapply when pricing the live odds board, e.g. 1.10 = 10% overround."
     )
 
-    confidence_threshold = models.FloatField(
-        default=0.80,
-        help_text="Fire a confidence alert once any line's fair win probability reaches this level, e.g. 0.80 = 80%."
+    pre_match_odds = models.FloatField(
+        help_text="Bookmaker's actual odds for the mu_0 line before kickoff, e.g. 1.94."
+    )
+
+    odds_margin = models.FloatField(
+        default=0.10,
+        help_text="Acceptable drift in the live fair odds from pre_match_odds, e.g. 0.10."
+    )
+
+    variation_threshold = models.FloatField(
+        default=5.0,
+        help_text="Minimum swing in the live projected total (vs mu_0) required to fire an alert."
     )
 
     created_at = models.DateTimeField(

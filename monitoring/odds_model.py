@@ -111,3 +111,43 @@ def odds_board(mu_0, r, t, k, overround=1.10, T=DEFAULT_MATCH_MINUTES):
         'center': center,
         'rows': rows,
     }
+
+def variation_status(mu_0, r, mu_live, overround, pre_match_odds, odds_margin, variation_threshold):
+    """
+    Evaluates the two-condition Pace Up/Down check shared by the live
+    watch-detail display and the polling command's alert firing:
+
+      1) |mu_live - mu_0| >= variation_threshold
+      2) the fair odd for the line nearest mu_live, under the *live*
+         mu_live/r, stays within odds_margin of pre_match_odds
+
+    Returns a dict describing the current state regardless of whether
+    both conditions are met, so callers can display "how close" as well
+    as fire on a clean pass.
+    """
+    variation = mu_live - mu_0
+    meets_variation = abs(variation) >= variation_threshold
+    direction = 'UP' if variation > 0 else 'DOWN'
+    label = 'Pace is up' if variation > 0 else 'Pace is low'
+
+    line = round(mu_live) - 0.5
+    live_odds = None
+    meets_odds = False
+    try:
+        p_over = _fair_p_over(line, mu_live, r)
+        p_side = p_over if variation > 0 else (1 - p_over)
+        if p_side > 0:
+            live_odds = round((1 / p_side) * overround, 2)
+            meets_odds = abs(live_odds - pre_match_odds) <= odds_margin
+    except (ValueError, ZeroDivisionError):
+        pass
+
+    return {
+        'variation': round(variation, 2),
+        'direction': direction,
+        'label': label,
+        'meets_variation': meets_variation,
+        'live_odds': live_odds,
+        'meets_odds': meets_odds,
+        'fires': meets_variation and meets_odds,
+    }

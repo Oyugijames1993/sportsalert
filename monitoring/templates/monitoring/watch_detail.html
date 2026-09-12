@@ -441,7 +441,7 @@
 
             {% for board in odds_boards %}
 
-                <div class="d-flex align-items-center gap-2 mb-2">
+                <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
                     <span style="color:#c9d4e0; font-size:0.8rem; font-weight:600;">
                         {{ board.stat_type }}
                     </span>
@@ -454,6 +454,21 @@
                     <span style="color:#5c6b7a; font-size:0.68rem;">
                         {{ board.observed_k }} so far
                     </span>
+                    {% with vs=board.variation_status %}
+                    <span style="color:#6b7d91; font-size:0.68rem;">
+                        variation {{ vs.variation }}
+                    </span>
+                    {% if vs.live_odds %}
+                    <span style="color:#6b7d91; font-size:0.68rem;">
+                        odds {{ vs.live_odds }}
+                    </span>
+                    {% endif %}
+                    {% if vs.fires %}
+                        <span style="background:{% if vs.direction == 'UP' %}#1f4d2e{% else %}#4d1f1f{% endif %}; color:{% if vs.direction == 'UP' %}#7fdb9a{% else %}#e08080{% endif %}; font-size:0.7rem; padding:2px 7px; border-radius:3px; font-weight:600;">
+                            {{ vs.label }}
+                        </span>
+                    {% endif %}
+                    {% endwith %}
                 </div>
 
                 <div class="table-responsive mb-3">
@@ -622,57 +637,7 @@
 
 </div>
 
-<!-- FOOTBALL RECENT OCCURRENCES -->
-
-<div class="card shadow-sm">
-
-    <div class="card-header">
-        Recent Occurrences
-    </div>
-
-    <div class="card-body">
-
-        {% if stat_occurrences %}
-
-            <table class="table table-sm">
-
-                <thead>
-                    <tr>
-                        <th>Stat</th>
-                        <th>Team</th>
-                        <th>Value</th>
-                        <th>Detected</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-
-                    {% for occ in stat_occurrences %}
-
-                        <tr>
-                            <td>{{ occ.get_stat_type_display }}</td>
-                            <td>{{ occ.get_team_display }}</td>
-                            <td>{{ occ.value_at_time }}</td>
-                            <td>{{ occ.detected_at }}</td>
-                        </tr>
-
-                    {% endfor %}
-
-                </tbody>
-
-            </table>
-
-        {% else %}
-
-            <p class="text-muted mb-0">
-                No occurrences recorded yet.
-            </p>
-
-        {% endif %}
-
-    </div>
-
-</div>
+<!-- Recent Occurrences table removed — data shown on graphs instead -->
 
 {% endif %}
 
@@ -682,6 +647,11 @@
 
 </div>
 
+
+
+{% endblock %}
+
+{% block scripts %}
 {% if watch.sport == "football" %}
 <script>
 (function () {
@@ -777,5 +747,4 @@
 })();
 </script>
 {% endif %}
-
 {% endblock %}

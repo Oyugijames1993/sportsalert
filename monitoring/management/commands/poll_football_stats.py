@@ -1,8 +1,9 @@
 """
 Polls API-Football for tracked football matches and evaluates:
   - StatAlertRule (silence / burst) — optional, per-stat alert rules
-  - StatOddsModel (confidence) — fires when any line's live-projected
-    fair win probability crosses the user's chosen confidence threshold
+  - StatOddsModel (variation) — fires when the live-projected total
+    swings past the user's variation threshold AND the fair odds for
+    that projected line stay within margin of the pre-match odds
 
 Uses TWO API calls per watch per poll cycle:
   1. /fixtures?id={match_id}       — current match status (to know when to
@@ -139,7 +140,7 @@ class Command(BaseCommand):
                 self._evaluate_rule(watch, rule, now)
             t = watch.elapsed_minutes or 0
             for row in odds_rows:
-                self._evaluate_confidence(watch, row, t)
+                self._evaluate_variation(watch, row, t)
             return
 
         stats_resp = requests.get(
@@ -181,7 +182,7 @@ class Command(BaseCommand):
 
         t = watch.elapsed_minutes or 0
         for row in odds_rows:
-            self._evaluate_confidence(watch, row, t)
+            self._evaluate_variation(watch, row, t)
 
     def _extract_stat_value(self, team_block, api_label):
         for stat in team_block.get("statistics", []):
@@ -302,15 +303,14 @@ class Command(BaseCommand):
                 )
                 self.stdout.write(self.style.WARNING(f"  ALERT (burst): {message}"))
 
-    def _evaluate_confidence(self, watch, row, t):
+    def _evaluate_variation(self, watch, row, t):
         """
-        Computes the live odds board for this StatOddsModel row and fires
-        a confidence alert the first time any line's fair win probability
-        (Over or Under) reaches the user's chosen threshold. Dedup is by
-        checking whether an alert already exists mentioning that exact
-        line+side for this odds_model row — so each specific line only
-        ever fires once, but a newly-safe line as the match progresses
-        still fires fresh.
+        Fires a Pace Up/Down alert when both hold:
+          1) |mu_live - mu_0| >= row.variation_threshold
+          2) the fair odd for the line nearest mu_live is within
+             row.odds_margin of row.pre_match_odds
+        Dedup: one alert per odds_model row per direction (UP/DOWN) —
+        refires only if it reverts and crosses again, not on every poll.
         """
         latest_home = (
             StatOccurrence.objects
@@ -327,28 +327,31 @@ class Command(BaseCommand):
 
         try:
             r = odds_model.get_dispersion_r(row.stat_type, row.dispersion_r)
-            board = odds_model.odds_board(mu_0=row.mu_0, r=r, t=t, k=k, overround=row.overround)
+            mu_live = odds_model.live_mean(mu_0=row.mu_0, r=r, t=t, k=k)
         except (ValueError, ZeroDivisionError):
             return
 
-        for line_row in board['rows']:
-            p_over = line_row['p_over_fair']
-            p_under = 1 - p_over
+        status = odds_model.variation_status(
+            mu_0=row.mu_0, r=r, mu_live=mu_live, overround=row.overround,
+            pre_match_odds=row.pre_match_odds, odds_margin=row.odds_margin,
+            variation_threshold=row.variation_threshold,
+        )
+        if not status['fires']:
+            return
 
-            for side, prob in (('Over', p_over), ('Under', p_under)):
-                if prob < row.confidence_threshold:
-                    continue
-                signature = f"{side} {line_row['label'].split()[-1]}"  # e.g. "Over 21"
-                already_fired = StatAlert.objects.filter(
-                    odds_model=row, alert_type='confidence', message__icontains=signature
-                ).exists()
-                if already_fired:
-                    continue
-                message = (
-                    f"{watch}: {row.get_stat_type_display()} — {signature} "
-                    f"has reached {prob*100:.0f}% confidence (threshold {row.confidence_threshold*100:.0f}%)."
-                )
-                StatAlert.objects.create(
-                    watch=watch, odds_model=row, alert_type='confidence', message=message
-                )
-                self.stdout.write(self.style.WARNING(f"  ALERT (confidence): {message}"))
+        signature = f"variation-{status['direction']}"
+        already_fired = StatAlert.objects.filter(
+            odds_model=row, alert_type='variation', message__icontains=signature
+        ).exists()
+        if already_fired:
+            return
+
+        message = (
+            f"{watch}: {row.get_stat_type_display()} — {status['label']} "
+            f"(projected {mu_live:.1f}, expected {row.mu_0}, variation {status['variation']:+.1f}) "
+            f"[{signature}]"
+        )
+        StatAlert.objects.create(
+            watch=watch, odds_model=row, alert_type='variation', message=message
+        )
+        self.stdout.write(self.style.WARNING(f"  ALERT (variation): {message}"))
