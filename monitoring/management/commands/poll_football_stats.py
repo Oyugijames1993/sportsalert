@@ -251,13 +251,23 @@ class Command(BaseCommand):
             self.stdout.write(f"    New occurrence: {stat_type} ({team}) {last_value} -> {value}")
 
     def _evaluate_rule(self, watch, rule, now):
-        teams_to_check = ["home", "away"] if rule.team_scope == "both" else [rule.team_scope]
+        # team_groups: list of (label, [team codes to sum together]).
+        # 'both' checks home and away as two SEPARATE groups (existing
+        # behavior — each team judged independently against the same
+        # threshold). 'combined' sums both teams into one group. 'home'
+        # / 'away' each produce a single single-team group.
+        if rule.team_scope == "combined":
+            team_groups = [("combined", ["home", "away"])]
+        elif rule.team_scope == "both":
+            team_groups = [("home", ["home"]), ("away", ["away"])]
+        else:
+            team_groups = [(rule.team_scope, [rule.team_scope])]
 
         if rule.mode == "silence":
-            for team in teams_to_check:
+            for label, teams in team_groups:
                 last = (
                     StatOccurrence.objects
-                    .filter(watch=watch, stat_type=rule.stat_type, team=team)
+                    .filter(watch=watch, stat_type=rule.stat_type, team__in=teams)
                     .order_by('-detected_at')
                     .first()
                 )
@@ -272,7 +282,7 @@ class Command(BaseCommand):
                 if already_fired:
                     continue
                 message = (
-                    f"{watch}: no new {rule.get_stat_type_display()} ({team}) "
+                    f"{watch}: no new {rule.get_stat_type_display()} ({label}) "
                     f"for {int(gap_minutes)} minutes (threshold {rule.silence_gap_minutes}m)."
                 )
                 StatAlert.objects.create(
@@ -282,9 +292,9 @@ class Command(BaseCommand):
 
         elif rule.mode == "burst":
             window_start = now - timezone.timedelta(minutes=rule.burst_window_minutes)
-            for team in teams_to_check:
+            for label, teams in team_groups:
                 count = StatOccurrence.objects.filter(
-                    watch=watch, stat_type=rule.stat_type, team=team,
+                    watch=watch, stat_type=rule.stat_type, team__in=teams,
                     detected_at__gte=window_start,
                 ).count()
                 if count < rule.burst_count:
@@ -295,7 +305,7 @@ class Command(BaseCommand):
                 if already_fired:
                     continue
                 message = (
-                    f"{watch}: {count} {rule.get_stat_type_display()} ({team}) "
+                    f"{watch}: {count} {rule.get_stat_type_display()} ({label}) "
                     f"in the last {rule.burst_window_minutes} minutes (threshold {rule.burst_count})."
                 )
                 StatAlert.objects.create(

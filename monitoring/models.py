@@ -433,7 +433,8 @@ class StatAlertRule(models.Model):
     )
 
     TEAM_SCOPE_CHOICES = (
-        ('both', 'Either team'),
+        ('both', 'Either team (checked separately)'),
+        ('combined', 'Combined total (both teams summed)'),
         ('home', 'Home team only'),
         ('away', 'Away team only'),
     )
