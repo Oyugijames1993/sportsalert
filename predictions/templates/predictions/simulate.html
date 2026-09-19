@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Match Simulation</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+        }
+
+        h1, h2, h3 {
+            color: #1f2937;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 180px;
+            gap: 15px;
+            align-items: end;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 7px;
+        }
+
+        select, input, button {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #d1d5db;
+            border-radius: 7px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .score-box {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            text-align: center;
+        }
+
+        .score-card {
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 10px;
+        }
+
+        .big-number {
+            font-size: 30px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: center;
+        }
+
+        th {
+            background: #f8fafc;
+            font-weight: 700;
+        }
+
+        .section-title {
+            margin-top: 0;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+        }
+
+        .probability {
+            font-weight: bold;
+        }
+
+        .markets-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 800px) {
+            .form-row,
+            .score-box,
+            .markets-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+        <h1>Match Simulation</h1>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-row">
+
+                <div>
+                    <label>Home Coach</label>
+                    <select name="home_coach" required>
+                        <option value="">Select home coach</option>
+                        {% for coach in coaches %}
+                            <option value="{{ coach.pk }}">
+                                {{ coach.coach_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label>Away Coach</label>
+                    <select name="away_coach" required>
+                        <option value="">Select away coach</option>
+                        {% for coach in coaches %}
+                            <option value="{{ coach.pk }}">
+                                {{ coach.coach_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label>Simulations</label>
+                    <input
+                        type="number"
+                        name="simulations"
+                        value="100000"
+                        min="1000"
+                        step="1000"
+                    >
+                </div>
+
+            </div>
+
+            <br>
+
+            <button type="submit">Run Simulation</button>
+        </form>
+    </div>
+
+
+    {% if result %}
+
+    <!-- GOALS -->
+    <div class="card">
+
+        <h2 class="section-title">
+            Goals Simulation
+        </h2>
+
+        <div class="score-box">
+
+            <div class="score-card">
+                <div>{{ result.home_coach }}</div>
+                <div class="big-number">
+                    {{ result.home_expected_goals|floatformat:2 }}
+                </div>
+                <div>Expected goals</div>
+            </div>
+
+            <div class="score-card">
+                <div>Match</div>
+                <div class="big-number">
+                    {{ result.total_expected_goals|floatformat:2 }}
+                </div>
+                <div>Expected total goals</div>
+            </div>
+
+            <div class="score-card">
+                <div>{{ result.away_coach }}</div>
+                <div class="big-number">
+                    {{ result.away_expected_goals|floatformat:2 }}
+                </div>
+                <div>Expected goals</div>
+            </div>
+
+        </div>
+
+        <br>
+
+        <table>
+            <tr>
+                <th>Outcome</th>
+                <th>Probability</th>
+            </tr>
+
+            <tr>
+                <td>Home win</td>
+                <td class="probability">
+                    {{ result.home_win|floatformat:2 }}%
+                </td>
+            </tr>
+
+            <tr>
+                <td>Draw</td>
+                <td class="probability">
+                    {{ result.draw|floatformat:2 }}%
+                </td>
+            </tr>
+
+            <tr>
+                <td>Away win</td>
+                <td class="probability">
+                    {{ result.away_win|floatformat:2 }}%
+                </td>
+            </tr>
+
+            <tr>
+                <td>BTTS</td>
+                <td class="probability">
+                    {{ result.btts|floatformat:2 }}%
+                </td>
+            </tr>
+
+            <tr>
+                <td>Over 1.5 goals</td>
+                <td class="probability">
+                    {{ result.over_1_5|floatformat:2 }}%
+                </td>
+            </tr>
+
+            <tr>
+                <td>Over 2.5 goals</td>
+                <td class="probability">
+                    {{ result.over_2_5|floatformat:2 }}%
+                </td>
+            </tr>
+
+            <tr>
+                <td>Over 3.5 goals</td>
+                <td class="probability">
+                    {{ result.over_3_5|floatformat:2 }}%
+                </td>
+            </tr>
+
+        </table>
+
+    </div>
+
+
+    <!-- MATCH STATISTICS -->
+    <div class="card">
+
+        <h2 class="section-title">
+            Predicted Match Statistics
+        </h2>
+
+        <table>
+
+            <tr>
+                <th>Statistic</th>
+                <th>{{ result.home_coach }}</th>
+                <th>{{ result.away_coach }}</th>
+                <th>Total</th>
+            </tr>
+
+            <tr>
+                <td>Shots</td>
+                <td>{{ result.home_shots|floatformat:2 }}</td>
+                <td>{{ result.away_shots|floatformat:2 }}</td>
+                <td>{{ result.total_shots|floatformat:2 }}</td>
+            </tr>
+
+            <tr>
+                <td>Shots on target</td>
+                <td>{{ result.home_shots_on_target|floatformat:2 }}</td>
+                <td>{{ result.away_shots_on_target|floatformat:2 }}</td>
+                <td>{{ result.total_shots_on_target|floatformat:2 }}</td>
+            </tr>
+
+            <tr>
+                <td>Shots inside box</td>
+                <td>{{ result.home_shots_inside_box|floatformat:2 }}</td>
+                <td>{{ result.away_shots_inside_box|floatformat:2 }}</td>
+                <td>{{ result.total_shots_inside_box|floatformat:2 }}</td>
+            </tr>
+
+            <tr>
+                <td>Shots outside box</td>
+                <td>{{ result.home_shots_outside_box|floatformat:2 }}</td>
+                <td>{{ result.away_shots_outside_box|floatformat:2 }}</td>
+                <td>{{ result.total_shots_outside_box|floatformat:2 }}</td>
+            </tr>
+
+            <tr>
+                <td>Corners</td>
+                <td>{{ result.home_corners|floatformat:2 }}</td>
+                <td>{{ result.away_corners|floatformat:2 }}</td>
+                <td>{{ result.total_corners|floatformat:2 }}</td>
+            </tr>
+
+            <tr>
+                <td>Offsides</td>
+                <td>{{ result.home_offsides|floatformat:2 }}</td>
+                <td>{{ result.away_offsides|floatformat:2 }}</td>
+                <td>{{ result.total_offsides|floatformat:2 }}</td>
+            </tr>
+
+            <tr>
+                <td>Fouls</td>
+                <td>{{ result.home_fouls|floatformat:2 }}</td>
+                <td>{{ result.away_fouls|floatformat:2 }}</td>
+                <td>{{ result.total_fouls|floatformat:2 }}</td>
+            </tr>
+
+            <tr>
+                <td>Tackles</td>
+                <td>{{ result.home_tackles|floatformat:2 }}</td>
+                <td>{{ result.away_tackles|floatformat:2 }}</td>
+                <td>{{ result.total_tackles|floatformat:2 }}</td>
+            </tr>
+
+            <tr>
+                <td>Interceptions</td>
+                <td>{{ result.home_interceptions|floatformat:2 }}</td>
+                <td>{{ result.away_interceptions|floatformat:2 }}</td>
+                <td>{{ result.total_interceptions|floatformat:2 }}</td>
+            </tr>
+
+            <tr>
+                <td>Blocks</td>
+                <td>{{ result.home_blocks|floatformat:2 }}</td>
+                <td>{{ result.away_blocks|floatformat:2 }}</td>
+                <td>{{ result.total_blocks|floatformat:2 }}</td>
+            </tr>
+
+            <tr>
+                <td>Duels</td>
+                <td>{{ result.home_duels|floatformat:2 }}</td>
+                <td>{{ result.away_duels|floatformat:2 }}</td>
+                <td>{{ result.total_duels|floatformat:2 }}</td>
+            </tr>
+
+            <tr>
+                <td>Duels won</td>
+                <td>{{ result.home_duels_won|floatformat:2 }}</td>
+                <td>{{ result.away_duels_won|floatformat:2 }}</td>
+                <td>{{ result.total_duels_won|floatformat:2 }}</td>
+            </tr>
+
+            <tr>
+                <td>Saves</td>
+                <td>{{ result.home_saves|floatformat:2 }}</td>
+                <td>{{ result.away_saves|floatformat:2 }}</td>
+                <td>{{ result.total_saves|floatformat:2 }}</td>
+            </tr>
+
+            <tr>
+                <td>Yellow cards</td>
+                <td>{{ result.home_yellow_cards|floatformat:2 }}</td>
+                <td>{{ result.away_yellow_cards|floatformat:2 }}</td>
+                <td>{{ result.total_yellow_cards|floatformat:2 }}</td>
+            </tr>
+
+            <tr>
+                <td>Red cards</td>
+                <td>{{ result.home_red_cards|floatformat:2 }}</td>
+                <td>{{ result.away_red_cards|floatformat:2 }}</td>
+                <td>{{ result.total_red_cards|floatformat:2 }}</td>
+            </tr>
+
+            <tr>
+                <td>Possession</td>
+                <td>{{ result.home_possession|floatformat:2 }}%</td>
+                <td>{{ result.away_possession|floatformat:2 }}%</td>
+                <td>100%</td>
+            </tr>
+
+            <tr>
+                <td>Total passes</td>
+                <td>{{ result.home_total_passes|floatformat:2 }}</td>
+                <td>{{ result.away_total_passes|floatformat:2 }}</td>
+                <td>{{ result.total_total_passes|floatformat:2 }}</td>
+            </tr>
+
+            <tr>
+                <td>Accurate passes</td>
+                <td>{{ result.home_accurate_passes|floatformat:2 }}</td>
+                <td>{{ result.away_accurate_passes|floatformat:2 }}</td>
+                <td>{{ result.total_accurate_passes|floatformat:2 }}</td>
+            </tr>
+
+            <tr>
+                <td>Pass accuracy</td>
+                <td>{{ result.home_pass_accuracy|floatformat:2 }}%</td>
+                <td>{{ result.away_pass_accuracy|floatformat:2 }}%</td>
+                <td>—</td>
+            </tr>
+
+        </table>
+
+    </div>
+
+
+    <!-- OVER / UNDER MARKETS -->
+    <div class="card">
+
+        <h2 class="section-title">
+            Statistical Over / Under Probabilities
+        </h2>
+
+        <div class="markets-grid">
+
+            {% for statistic, lines in result.markets.items %}
+
+            <div class="card">
+
+                <h3>{{ statistic|title }}</h3>
+
+                <table>
+
+                    <tr>
+                        <th>Line</th>
+                        <th>Over</th>
+                        <th>Under</th>
+                    </tr>
+
+                    {% for line, probabilities in lines.items %}
+
+                    <tr>
+                        <td>{{ line }}</td>
+
+                        <td>
+                            {{ probabilities.over|floatformat:2 }}%
+                        </td>
+
+                        <td>
+                            {{ probabilities.under|floatformat:2 }}%
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </table>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+
+    <!-- COMMON SCORELINES -->
+    <div class="card">
+
+        <h2 class="section-title">
+            Most Common Scorelines
+        </h2>
+
+        <table>
+
+            <tr>
+                <th>Score</th>
+                <th>Probability</th>
+            </tr>
+
+            {% for scoreline in result.common_scorelines %}
+
+            <tr>
+                <td>{{ scoreline.score }}</td>
+                <td>
+                    {{ scoreline.probability|floatformat:2 }}%
+                </td>
+            </tr>
+
+            {% endfor %}
+
+        </table>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+</body>
+</html>

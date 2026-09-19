@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "predictions",
 ]
 
 MIDDLEWARE = [
@@ -115,7 +116,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ── App-specific ────────────────────────────────────────────────────────
 API_SPORTS_KEY = config("API_SPORTS_KEY", default="")
-
+SPORTMONKS_TOKEN = config("SPORTMONKS_TOKEN", default="")
 # Shared-secret token protecting the external cron-triggered polling
 # endpoint (see monitoring/urls.py + views.py: poll_trigger). Set a real
 # random value via the POLL_TRIGGER_TOKEN env var in production.

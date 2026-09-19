@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coach Profiles</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        h1 {
+            margin-bottom: 25px;
+        }
+
+        .actions {
+            margin-bottom: 25px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 18px;
+            margin-right: 8px;
+            text-decoration: none;
+            border-radius: 6px;
+            background: #2563eb;
+            color: white;
+        }
+
+        .button.simulate {
+            background: #16a34a;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th,
+        td {
+            padding: 14px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+        }
+
+        th {
+            background: #f1f5f9;
+        }
+
+        .edit {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        .delete {
+            color: #dc2626;
+            text-decoration: none;
+        }
+
+        .empty {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Coach Profiles</h1>
+
+    <div class="actions">
+
+        <a href="{% url 'coach_create' %}" class="button">
+            + Add Coach
+        </a>
+
+        <a href="{% url 'simulate' %}" class="button simulate">
+            Monte Carlo Simulation
+        </a>
+
+    </div>
+
+    {% if coaches %}
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Coach</th>
+                    <th>Coach ID</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for coach in coaches %}
+
+                    <tr>
+
+                        <td>
+                            <strong>{{ coach.coach_name }}</strong>
+                        </td>
+
+                        <td>
+                            {{ coach.coach_id|default:"—" }}
+                        </td>
+
+                        <td>
+
+                            <a
+                                href="{% url 'coach_edit' coach.pk %}"
+                                class="edit"
+                            >
+                                Edit
+                            </a>
+
+                            &nbsp; | &nbsp;
+
+                            <a
+                                href="{% url 'coach_delete' coach.pk %}"
+                                class="delete"
+                            >
+                                Delete
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    {% else %}
+
+        <div class="empty">
+
+            <h3>No coach profiles yet.</h3>
+
+            <p>
+                Click <strong>+ Add Coach</strong> to create your first
+                hypothetical or real coach profile.
+            </p>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+</body>
+</html>

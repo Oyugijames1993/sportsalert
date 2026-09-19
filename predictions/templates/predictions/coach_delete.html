@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Delete Coach Profile</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        .warning {
+            color: #dc2626;
+            margin-bottom: 25px;
+        }
+
+        button,
+        a {
+            display: inline-block;
+            padding: 11px 20px;
+            border-radius: 6px;
+            border: none;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        button {
+            background: #dc2626;
+            color: white;
+        }
+
+        a {
+            background: #64748b;
+            color: white;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+
+        <h1>Delete Coach Profile</h1>
+
+        <p class="warning">
+            Are you sure you want to delete
+            <strong>{{ coach.coach_name }}</strong>?
+        </p>
+
+        <p>
+            This will permanently remove the coach's Home and Away
+            profile data.
+        </p>
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            <button type="submit">
+                Delete Profile
+            </button>
+
+            <a href="{% url 'coach_list' %}">
+                Cancel
+            </a>
+
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+</html>

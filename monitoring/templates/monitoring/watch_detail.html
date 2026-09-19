@@ -224,7 +224,7 @@
     </div>
 
     <div class="card-body">
-        <div style="height:260px;">
+        <div style="height:550px;">
             <canvas id="possessionChart"></canvas>
         </div>
     </div>
@@ -668,7 +668,7 @@
                     borderColor: "#26a69a",
                     backgroundColor: "rgba(38,166,154,0.15)",
                     borderWidth: 1.5,
-                    pointRadius: 0,
+                    pointRadius: 2,
                     stepped: "before",
                     fill: "origin",
                 },
@@ -678,7 +678,7 @@
                     borderColor: "#ef5350",
                     backgroundColor: "rgba(239,83,80,0.15)",
                     borderWidth: 1.5,
-                    pointRadius: 0,
+                    pointRadius: 2,
                     stepped: "before",
                     fill: "origin",
                 },
@@ -737,6 +737,7 @@
             .then(data => {
                 chart.data.datasets[0].data = data.home;
                 chart.data.datasets[1].data = data.away;
+
                 chart.update();
             })
             .catch(error => console.error("Possession fetch error:", error));
