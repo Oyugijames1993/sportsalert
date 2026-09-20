@@ -177,6 +177,36 @@ def simulate_match(home_profile, away_profile, simulations=100_000, random_seed=
             )
 
     # ---------------------------------------------------------
+    # THROW-INS
+    # ---------------------------------------------------------
+
+    home_won = _safe_value(home_profile, "throw_ins_won_home")
+    home_conceded = _safe_value(home_profile, "throw_ins_conceded_home")
+    away_won = _safe_value(away_profile, "throw_ins_won_away")
+    away_conceded = _safe_value(away_profile, "throw_ins_conceded_away")
+
+    if home_won is not None and away_conceded is not None:
+        home_throw_mean = (home_won + away_conceded) / 2.0
+        home_throw_values = _simulate_count(rng, home_throw_mean, simulations)
+        simulated["home_throw_ins"] = home_throw_values
+        result["home_expected_throw_ins"] = _average(home_throw_values)
+    else:
+        home_throw_values = None
+
+    if away_won is not None and home_conceded is not None:
+        away_throw_mean = (away_won + home_conceded) / 2.0
+        away_throw_values = _simulate_count(rng, away_throw_mean, simulations)
+        simulated["away_throw_ins"] = away_throw_values
+        result["away_expected_throw_ins"] = _average(away_throw_values)
+    else:
+        away_throw_values = None
+
+    if home_throw_values is not None and away_throw_values is not None:
+        total_throw_values = home_throw_values + away_throw_values
+        simulated["total_throw_ins"] = total_throw_values
+        result["total_expected_throw_ins"] = _average(total_throw_values)
+
+    # ---------------------------------------------------------
     # PASSING STATISTICS
     # ---------------------------------------------------------
 
@@ -243,6 +273,35 @@ def simulate_match(home_profile, away_profile, simulations=100_000, random_seed=
 
         result["home_possession"] = _average(home_values)
         result["away_possession"] = _average(away_values)
+
+    # ---------------------------------------------------------
+    # BALL RETENTION — SECONDS OF POSSESSION PER PASS
+    # ---------------------------------------------------------
+
+    home_passes = simulated.get("home_total_passes")
+    away_passes = simulated.get("away_total_passes")
+    home_possession = simulated.get("home_possession")
+    away_possession = simulated.get("away_possession")
+
+    if home_passes is not None and home_possession is not None:
+        home_seconds_per_pass = np.divide(
+            home_possession * 54.0,
+            home_passes,
+            out=np.zeros_like(home_passes, dtype=float),
+            where=home_passes > 0,
+        )
+        simulated["home_seconds_per_pass"] = home_seconds_per_pass
+        result["home_seconds_per_pass"] = _average(home_seconds_per_pass)
+
+    if away_passes is not None and away_possession is not None:
+        away_seconds_per_pass = np.divide(
+            away_possession * 54.0,
+            away_passes,
+            out=np.zeros_like(away_passes, dtype=float),
+            where=away_passes > 0,
+        )
+        simulated["away_seconds_per_pass"] = away_seconds_per_pass
+        result["away_seconds_per_pass"] = _average(away_seconds_per_pass)
 
     # ---------------------------------------------------------
     # PASS ACCURACY
@@ -491,6 +550,7 @@ def simulate_match(home_profile, away_profile, simulations=100_000, random_seed=
         "shots": [20.5, 22.5, 24.5, 26.5, 28.5],
         "shots_on_target": [6.5, 7.5, 8.5, 9.5],
         "offsides": [1.5, 2.5, 3.5, 4.5],
+        "throw_ins": [20.5, 22.5, 24.5, 26.5, 28.5, 30.5, 32.5, 34.5, 36.5],
     }
 
     result["markets"] = {}

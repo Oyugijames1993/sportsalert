@@ -26,7 +26,8 @@ class CoachProfile(models.Model):
     successful_dribbles_home = models.FloatField(default=0)
     offsides_home = models.FloatField(default=0)
     corners_home = models.FloatField(default=0)
-
+    throw_ins_won_home = models.FloatField(default=0)
+    throw_ins_conceded_home = models.FloatField(default=0)
     possession_home = models.FloatField(default=0)
     total_passes_home = models.FloatField(default=0)
     accurate_passes_home = models.FloatField(default=0)
@@ -58,7 +59,8 @@ class CoachProfile(models.Model):
     successful_dribbles_away = models.FloatField(default=0)
     offsides_away = models.FloatField(default=0)
     corners_away = models.FloatField(default=0)
-
+    throw_ins_won_away = models.FloatField(default=0)
+    throw_ins_conceded_away = models.FloatField(default=0)
     possession_away = models.FloatField(default=0)
     total_passes_away = models.FloatField(default=0)
     accurate_passes_away = models.FloatField(default=0)
